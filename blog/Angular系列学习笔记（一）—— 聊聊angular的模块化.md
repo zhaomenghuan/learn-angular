@@ -1,6 +1,9 @@
 > **文章来源：小青年原创**
+
 > **发布时间：2017-3-6**
+
 > **关键词：angular，vue，模块化，$scope，依赖注入，service**
+
 > **转载需标注本文原始地址: <http://zhaomenghuan.github.io/#!/blog/20170306>**
 
 ## 前言
