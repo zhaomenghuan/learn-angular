@@ -1,0 +1,1106 @@
+<h1 id="mui-im-web-im-sdk">mui初级入门教程（五）—  聊聊即时通讯（IM），基于环信 web im SDK</h1>
+<blockquote>
+<ul>
+<li><strong>文章来源：小青年原创</strong></li>
+<li><strong>发布时间：2016-06-15</strong></li>
+<li><strong>关键词：mui，环信 web im，html5+，im，页面传值，缓存</strong></li>
+<li><strong>转载需标注本文原始地址: <a href="http://zhaomenghuan.github.io/#!/blog/20160615">http://zhaomenghuan.github.io/#!/blog/20160615</a></strong></li>
+</ul>
+</blockquote>
+<h2 id="-">写在前面</h2>
+<p>感觉自从<code>qq</code>、微信这种<code>APP</code>用多了，现在都没啥人发短信了，现在什么<code>APP</code>都想加入<code>IM</code>的功能，曾经有段时间在折腾自己撸一个聊天的东西，也尝试过很多平台，今天这里给大家介绍一下从零开始自己做一个聊天的<code>app</code>功能。因为之前帮朋友做过一个基于环信的聊天功能，这里就以环信的平台为例举个例子说明。这篇文章注意想讲解一下集成这种第三方的一般实现方法，不会一下子就把所有的功能都集成，因为之前做环信主要是在微信上用，所以用的是环信的<code>Web IM</code>，遇到了蛮多坑，这次打算用<code>dcloud</code>这边的<code>mui</code>重新集成，所以在没有完全做完之前，所以也不知道有些坑具体能够在有限的时间内解决，本文仅供参考，欢迎大家去实践检验。在写这篇文章之前先贴一个<code>Dcloud</code>论坛中的资源帖，<a href="http://ask.dcloud.net.cn/article/649">【即时通信、im问题汇总】</a></p>
+<h2 id="-">准备工作</h2>
+<h3 id="1-">1.注册账号</h3>
+<p>我们要先去<a href="http://www.easemob.com/product/im">环信官网</a>注册一个账号，然后在后台创建一个应用，因为我们后面在做功能的时候可以用后面发送消息及图片来测试收消息，用户管理在后台也可以看得一清二楚。</p>
+<p><img src="http://oo1uw74rb.bkt.clouddn.com/20160615001.png" alt="环信官网"></p>
+<p>创建成功后找到应用标识(AppKey)，这个在后期配置中会用到。</p>
+<h3 id="2-sdk">2.下载SDK</h3>
+<p><a href="http://www.easemob.com/download/im">http://www.easemob.com/download/im</a>
+这里我们使用的是<code>Web IM</code>，所以下载的<code>SDK</code>是<code>Web IM</code>版本，下载之后我们会看到一个演示<code>demo</code>,由于这个是<code>pc</code>版本，和我们需求不一致，所以我们只需要关心<code>sdk</code>目录下的文件和sdk集成需要修改的配置文件<code>easemob.im.config.js</code>。</p>
+<pre><code class="lang-js">|---README.MD：
+|---index.html：demo首页，包含sdk基础功能和浏览器兼容性的解决方案
+
+|---static/：
+    js/：
+        easemob.im.config.js：sdk集成需要修改的配置文件
+    css/：
+    img/：
+    sdk/：/*sdk相关文件*/
+        release.txt：各版本更新细节
+        quickstart.md：环信WebIM快速入门文档
+        easemob.im-1.1.js：js sdk
+        easemob.im-1.1.shim.js：支持老版本sdk api
+        strophe.js：sdk依赖脚本
+</code></pre>
+<h3 id="3-">3.开发文档</h3>
+<p>Web IM 介绍 <a href="http://docs.easemob.com/im/400webimintegration/10webimintro">http://docs.easemob.com/im/400webimintegration/10webimintro</a></p>
+<h2 id="-">项目实战</h2>
+<p>由于这篇重在在于如何使用第三方开发<code>IM</code>，感觉说再多也诶有意义，直接上代码说明。不讲解过多的原理、细节，只讲究开发流程。</p>
+<h3 id="1-">1.用户注册功能</h3>
+<p>首先我们在hbuilder中先新建一个项目<code>easemobIM</code>,然后把环信<code>sdk</code>文件夹和配置文件拷贝到我们的工程中。为了节约时间，下面的功能演示我是根据官方登录模板改的。
+<strong>html/reg.html</strong></p>
+<pre><code class="lang-html">&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;meta charset=&quot;utf-8&quot;&gt;
+        &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no&quot; /&gt;
+        &lt;title&gt;&lt;/title&gt;
+        &lt;link href=&quot;../css/mui.min.css&quot; rel=&quot;stylesheet&quot; /&gt;
+        &lt;link href=&quot;../css/style.css&quot; rel=&quot;stylesheet&quot; /&gt;
+        &lt;style&gt;
+            .mui-input-group:first-child {
+                margin-top: 20px;
+            }
+            .mui-input-group label {
+                width: 22%;
+            }
+            .mui-input-row label~input,
+            .mui-input-row label~select,
+            .mui-input-row label~textarea {
+                width: 78%;
+            }
+            .mui-checkbox input[type=checkbox],
+            .mui-radio input[type=radio] {
+                top: 6px;
+            }
+            .mui-content-padded {
+                margin-top: 25px;
+            }
+            .mui-btn {
+                padding: 10px;
+            }
+        &lt;/style&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;header class=&quot;mui-bar mui-bar-nav&quot;&gt;
+            &lt;a class=&quot;mui-action-back mui-icon mui-icon-left-nav mui-pull-left&quot;&gt;&lt;/a&gt;
+            &lt;h1 class=&quot;mui-title&quot;&gt;注册&lt;/h1&gt;
+        &lt;/header&gt;
+        &lt;div class=&quot;mui-content&quot;&gt;
+            &lt;form class=&quot;mui-input-group&quot;&gt;
+                &lt;div class=&quot;mui-input-row&quot;&gt;
+                    &lt;label&gt;手机&lt;/label&gt;
+                    &lt;input id=&#39;username&#39; type=&quot;text&quot; class=&quot;mui-input-clear mui-input&quot; placeholder=&quot;请输入手机号码&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;mui-input-row&quot;&gt;
+                    &lt;label&gt;昵称&lt;/label&gt;
+                    &lt;input id=&#39;nickname&#39; type=&quot;text&quot; class=&quot;mui-input-clear mui-input&quot; placeholder=&quot;请输入昵称&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;mui-input-row&quot;&gt;
+                    &lt;label&gt;密码&lt;/label&gt;
+                    &lt;input id=&#39;password&#39; type=&quot;password&quot; class=&quot;mui-input-clear mui-input&quot; placeholder=&quot;请输入密码&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;mui-input-row&quot;&gt;
+                    &lt;label&gt;确认&lt;/label&gt;
+                    &lt;input id=&#39;password_confirm&#39; type=&quot;password&quot; class=&quot;mui-input-clear mui-input&quot; placeholder=&quot;请确认密码&quot;&gt;
+                &lt;/div&gt;
+            &lt;/form&gt;
+            &lt;div class=&quot;mui-content-padded&quot;&gt;
+                &lt;button id=&#39;reg&#39; class=&quot;mui-btn mui-btn-block mui-btn-primary&quot;&gt;注册&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;script src=&quot;../js/mui.min.js&quot;&gt;&lt;/script&gt;
+        &lt;!--sdk--&gt;
+        &lt;script src=&quot;../sdk/strophe.js&quot;&gt;&lt;/script&gt;
+        &lt;script src=&quot;../sdk/easemob.im-1.1.js&quot;&gt;&lt;/script&gt;
+        &lt;script src=&quot;../sdk/easemob.im-1.1.shim.js&quot;&gt;&lt;/script&gt;&lt;!--兼容老版本sdk需引入此文件--&gt;
+        &lt;!--config--&gt;
+        &lt;script src=&quot;../js/easemob.im.config.js&quot;&gt;&lt;/script&gt;
+        &lt;script&gt;
+            mui.init();
+
+            // 输入参数
+            var regConfig = {
+                username: mui(&quot;#username&quot;)[0],
+                nickname: mui(&quot;#nickname&quot;)[0],
+                password: mui(&quot;#password&quot;)[0],
+                passwordConfirm: mui(&quot;#password_confirm&quot;)[0]
+            };        
+
+            // 注册事件监听
+            mui(&quot;#reg&quot;)[0].addEventListener(&#39;tap&#39;,function(){
+                var username = regConfig.username.value;
+                var nickname = regConfig.nickname.value;
+                var password = regConfig.password.value;
+                var passwordConfirm = regConfig.passwordConfirm.value;
+
+                // 电话号码校验
+                if (!isMobile(username)){
+                    mui.toast(&quot;电话号码格式不正确&quot;);
+                    return;
+                }
+                // 昵称非空校验
+                if (!isEmpty(nickname)){
+                    mui.toast(&#39;昵称不能为空&#39;);
+                    return;
+                }
+                // 密码非空校验
+                if (!isEmpty(password)){
+                    mui.toast(&#39;密码不能为空&#39;);
+                    return;
+                }
+                // 密码重复校验
+                if (passwordConfirm != password) {
+                    mui.toast(&#39;密码两次输入不一致&#39;);
+                    return;
+                }
+               // 环信SDK注册
+                var options = {
+                    username : username,
+                    password : password,
+                    nickname : nickname,
+                    appKey : Easemob.im.config.appkey,
+                    success : function(result) {
+                        //注册成功;
+                        console.log(JSON.stringify(result))
+                        mui.toast(&#39;注册成功&#39;);
+                    },
+                    error : function(e) {
+                        //注册失败;
+                        console.log(JSON.stringify(e));
+                        mui.toast(&#39;注册失败：&#39;+e.error);
+                    }
+                };
+                Easemob.im.Helper.registerUser(options);
+
+            });        
+
+            // 是否为电话号码
+            function isMobile(value) {
+                var validateReg = /0?(13|14|15|18)[0-9]{9}/;
+                return validateReg.test(value);
+            }
+
+            // 是否为空
+            function isEmpty(value){
+                var validateReg = /^\S+$/;
+                return validateReg.test(value);
+            }
+        &lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p> 这是注册页面的代码，我们首先要引入环信的<code>sdk</code>和<code>easemob.im.config.js</code>，并且将<code>easemob.im.config.js</code>中的<code>appkey</code>换成自己的，然后根据用户名/密码/昵称注册环信 Web IM，提交注册的代码为:</p>
+<pre><code class="lang-js">var options = {
+    username : username,
+    password : password,
+    nickname : nickname,
+    appKey : Easemob.im.config.appkey,
+    success : function(result) {
+        //注册成功;
+        console.log(JSON.stringify(result))
+        mui.toast(&#39;注册成功&#39;);
+    },
+    error : function(e) {
+        //注册失败;
+        console.log(JSON.stringify(e));
+        mui.toast(&#39;注册失败：&#39;+e.error);
+    }
+};
+Easemob.im.Helper.registerUser(options);
+</code></pre>
+<p>我们注册完了后可以在环信后台【IM用户】查看用户注册信息，我们我们用其他平台，只需要把这块的内容改成相应的内容就OK。</p>
+<h3 id="2-">2.用户登录功能</h3>
+<p>有了注册页面的经验，我们写登录页面也很简单，页面布局脚本和其他与登录逻辑无关的代码我这里不贴了，大家在我最后给的地址上下载完整代码，这里只讲解基本基本思路。环信登录优两种方法，一种是通过实例化<code>new Easemob.im.Connection()</code>建立连接，一种是使用工具类<code>Easemob.im.Helper.login2UserGrid(options)</code>，我们刚刚注册就是使用了工具类，为了便于大家后面的学习，我们在这里把两种方法都说一下：</p>
+<h4 id="-new-easemob-im-connection-">实例化<code>new Easemob.im.Connection()</code>建立连接</h4>
+<p><strong>1.创建连接</strong></p>
+<pre><code class="lang-js">var conn = new Easemob.im.Connection();
+</code></pre>
+<p><strong>2.初始化连接</strong></p>
+<pre><code class="lang-js">conn.init({
+  onOpened : function() {
+     alert(&quot;成功登录&quot;);
+     conn.setPresence();
+  }
+});
+</code></pre>
+<p><strong>3.初始化连接</strong></p>
+<pre><code class="lang-js">// 打开连接
+conn.open({
+   user : username,
+   pwd : password,
+   appKey : Easemob.im.config.appkey
+});
+</code></pre>
+<blockquote>
+<p>这里我们需要注意的是<code>open()</code>方法中需要配置的属性是<code>user</code>和<code>pwd</code>，这和我们注册时的有区别，要注意哦！</p>
+</blockquote>
+<p>这里需要说明的是<code>init()</code>是环信提供的一个通用的方法，比如后面我们要用到的接收文本消息、图片消息等一系列的回调方法都写在这个里面，<code>onOpened()</code>方法主要是用于当执行<code>conn.open()</code>方法时需要执行的方法，我们一般会把页面需要初始化的逻辑写在<code>onOpened()</code>中，比如查询好友。</p>
+<p><strong>完整代码：</strong></p>
+<pre><code class="lang-js">// 输入参数
+var loginConfig = {
+    username: mui(&quot;#username&quot;)[0],
+    password: mui(&quot;#password&quot;)[0]
+};    
+// 创建一个新的连接
+var conn = new Easemob.im.Connection();
+// 初始化连接
+conn.init({
+    onOpened : function() {
+        mui.toast(&quot;成功登录&quot;);
+        conn.setPresence();
+        mui.openWindow({
+          url: &#39;html/tab-webview-main.html&#39;,
+          extras:{
+             username:loginConfig.username.value,
+             password:loginConfig.password.value
+          }
+        })
+    }
+});
+// 登录事件监听
+mui(&quot;#login&quot;)[0].addEventListener(&#39;tap&#39;,function(){
+    var username = loginConfig.username.value;
+    var password = loginConfig.password.value;
+    // 电话号码校验
+    if (!isMobile(username)){
+        mui.toast(&quot;电话号码格式不正确&quot;);
+        return;
+     }
+    // 密码非空校验
+    if (!isEmpty(password)){
+        mui.toast(&#39;密码不能为空&#39;);
+        return;
+    }
+    // 打开连接
+    conn.open({
+        user : username,
+        pwd : password,
+        appKey : Easemob.im.config.appkey
+    });
+});
+</code></pre>
+<h4 id="-easemob-im-helper-login2usergrid-options-">工具类<code>Easemob.im.Helper.login2UserGrid(options)</code>建立连接</h4>
+<pre><code class="lang-js">// 登录
+var options = {
+    user : username,
+    pwd : password,
+    appKey : Easemob.im.config.appkey,
+    success:function(data){
+        console.log(JSON.stringify(data))
+        mui.toast(&quot;成功登录&quot;);
+        mui.openWindow({
+          url: &#39;html/tab-webview-main.html&#39;,
+          extras:{
+             username:loginConfig.username.value,
+             password:loginConfig.password.value
+          }
+        })
+    },
+    error: function(e){
+        console.log(JSON.stringify(e))
+        mui.toast(&quot;成功失败:&quot;+e);
+    }
+};
+Easemob.im.Helper.login2UserGrid(options);
+</code></pre>
+<p>上面我们用了两种方法讲解了登录的方法，各有优劣，第二种只做登录的工作，代码也比较简洁，但是当我们的页面是多个页面时我们的登录状态是不能检测到的，这个时候我们还是需要在每个页面通过创建连接初始化，所以我们在页面跳转过程加入了拓展参数<code>extras</code>传递参数，然后在登陆后的页面接收就可以。</p>
+<h3 id="3-">3.页面传参深入探究</h3>
+<p>为了尽可能简单的演示我们的功能，我这里不使用个性化的设计，就用官方模板组中的【mui底部选项卡（webview模式）】进行展示。新建模板文件如下：</p>
+<p><img src="http://i.imgur.com/JvDZUCk.png" alt=""></p>
+<p>我们去掉第一个选项卡，只保留消息<code>tab-webview-subpage-chat.html</code>、通讯录<code>tab-webview-subpage-contact.html</code>、设置<code>tab-webview-subpage-setting.html</code>三个选项卡。</p>
+<h4 id="-extras-">拓展参数<code>extras</code>传值</h4>
+<p>上一小节中，我们在登陆页面通过拓展参数<code>extras</code>传值，在主页面接收数据的方法为：</p>
+<pre><code class="lang-js">mui.plusReady(function(){
+    var self = plus.webview.currentWebview();
+    var username = self.username;
+    var password = self.password;
+    mui.toast(&quot;username:&quot;+username+&quot;&lt;br /&gt;&quot;+&quot;password:&quot;+password);
+});
+</code></pre>
+<p>在主界面<code>mui.plusReady</code>方法里面拿到值，然后可以在创建子<code>webview</code>时候用拓展参数传值，然后在子页用下面的方法用同样的方法可以拿到值。但是其实我们不需要父页面向子页面发消息，直接在子页面通过这个找到父页面对象就OK了，如下：
+<strong>子页面代码：</strong></p>
+<pre><code class="lang-js">mui.plusReady(function(){
+    var self = plus.webview.currentWebview().parent();
+    var username = self.username;
+    var password = self.password;
+    console.log(&quot;username:&quot;+username+&quot;password:&quot;+password);
+});
+</code></pre>
+<h4 id="-mui-fire-">预加载时使用<code>mui.fire()</code>传值</h4>
+<p>这里需要特别说明一下的是我们有时候想要预加载我们的主页面，这里我们有个地方我需要特别注意的是，我们需要用<code>mui.fire()</code>传递参数：</p>
+<blockquote>
+<p>mui.fire(target,event,data) </p>
+</blockquote>
+<p>特别提醒一下：<code>target</code>是需要接受参数的<code>webview</code>对象，而不是<code>id</code>，在这个地方我出过错误，当时一直没有察觉，如果是<code>id</code>，需要使用<code>plus.webview.getWebviewById(id)</code>进行转换。</p>
+<p>比如我们在登陆页面使用<code>preload</code>预加载，代码如下：</p>
+<pre><code class="lang-js">...
+var mainPage = null;
+mui.plusReady(function(){
+    mainPage = mui.preload({
+        &quot;url&quot;: &#39;html/tab-webview-main.html&#39;,
+        &quot;id&quot;: &#39;main&#39;
+    });
+})
+...
+</code></pre>
+<p><strong>登陆按钮监听事件中的success方法：</strong></p>
+<pre><code class="lang-js">mui.fire(mainPage,&#39;show&#39;,{
+       username:loginConfig.username.value,
+       password:loginConfig.password.value
+});
+setTimeout(function() {
+    mui.openWindow({
+        id: &#39;main&#39;,
+        show: {
+            aniShow: &#39;pop-in&#39;
+        },
+        waiting: {
+            autoShow: false
+        }
+    });
+}, 0);
+</code></pre>
+<p>在主页面中通过自定义<code>show</code>事件获得参数：</p>
+<pre><code class="lang-js">var username=null,password=null;
+// 页面传参数事件监听
+window.addEventListener(&#39;show&#39;,function(event){
+    // 获得事件参数
+    username = event.detail.username;
+    password = event.detail.password;
+    console.log(&quot;username:&quot;+username+&quot;password:&quot;+password);
+});
+</code></pre>
+<p>我们需要注意的是我们刚刚在登录页面的账号密码传递到了<code>tab-webview-main.html</code>主页面，但是我们的每个子页面没有拿到账号密码。这里就有个容易犯错的地方，我们可能会直接在创建子<code>webview</code>时候通过拓展参数<code>extras</code>传值。</p>
+<blockquote>
+<ul>
+<li>经过试验发现经过预加载的主界面<code>tab-webview-main.html</code>的<code>mui.plusReady</code>方法比页面的自定义事件监听先执行，这是因为我们通过预加载的时候其实已经就执行了<code>mui.plusReady</code>方法，而自定义事件是在<code>webview</code>打开的时候执行。当主界面被预加载时，子页面的<code>loaded</code>事件也随着完成，创建子页面的时候我们根本就没有拿到数据怎么传，自然在子页得到的是<code>undefined</code>。我们这个时候如果想在主界面生成子页面的时候通过拓展参数<code>extras</code>传递给子页面根本行不通！</li>
+</ul>
+</blockquote>
+<ul>
+<li><p>当需要接受参数的<code>webview</code>已经完成<code>loaded</code>事件，我们就不能使用拓展参数<code>extras</code>传参数，这个时候我们可以使用<code>webview.evalJS()</code>或者<code>mui.fire()</code>;另外我们使用<code>webview.evalJS()</code>或者<code>mui.fire()</code>时，接收参数的页面的<code>loaded</code>事件也必须发生才能使用。</p>
+</li>
+<li><p>mui传参数只能相互关联的两个webview之间传，比如A页面打开B页面，B页面打开C页面，A页面可以传值给B页面，但是A页面不能传值给C页面，我们可以通过B页面传给C页面。</p>
+</li>
+</ul>
+<p><strong>验证一个webview的loaded事件是否完成的方法：</strong></p>
+<pre><code class="lang-js">var ws = plus.webview.getWebviewById(id)
+ws.addEventListener( &quot;loaded&quot;, function(e){
+    console.log( &quot;Loaded: &quot;+e.target.getURL() );
+}, false );
+</code></pre>
+<p><strong>验证一个webview的show事件是否完成的方法：</strong></p>
+<pre><code class="lang-js">var ws=plus.webview.currentWebview();
+ws.addEventListener(&quot;show&quot;, function(e){
+    console.log( &quot;Webview Showed&quot; );
+}, false );
+</code></pre>
+<p>说这两个监听事件有啥用处呢，我们在预加载<code>webview</code>的时候，预加载完成的过程，<code>loaded</code>事件也随之完成，但是只有页面被打开时，<code>show</code>事件才完成，我们可以选择合适的时机发送或者接受参数。</p>
+<p>这里需要说明的是如果你想<code>localstorage</code>、<code>Storage</code>等本地存储传值，完全可以不用<code>extras</code>或者<code>mui.fire()</code>，当然还可以用<code>url</code>传参数。</p>
+<p>因为当初就是为了一个想法，预加载试试，然后试着试着各种问题，不过也因此明白了很多规则和调试方法，在这里提出来顺便总结一下页面传参需要注意的问题，免得新手在此花了很多冤枉时间，搞得现在都快忘了前面写了啥。其实这一部分可以独立出来，但是总感觉这种东西不是啥难事，脱离实际去讲总觉得不合适。</p>
+<h3 id="4-">4.获取好友列表及添加好友</h3>
+<h4 id="-">获取好友列表</h4>
+<p>我们在登陆页面与环信的服务器建立了联系，但是由于我们执行跳转了，我们依然还需要在需要请求数据时候在当前页面再次建立连接，前面我们讲到可以通过实例化<code>new Easemob.im.Connection()</code>建立连接，我们这里可以在当前页面实例化建立连接，而不是使用登录时的登陆工具类。实例化<code>new Easemob.im.Connection()</code>的三个步骤大家可以查看前面的内容，这里需要说明的是我们获取好友列表是在<code>conn.init</code>方法的<code>onOpened : function(){};</code> 中添加 <code>getRoster</code> 回调方法，从而获取好友列表。</p>
+<pre><code class="lang-js">// 创建连接
+var conn = new Easemob.im.Connection();
+// 初始化连接
+conn.init({
+    onOpened : function(){
+        // mui.toast(&quot;成功登录&quot;);
+        conn.setPresence(); //设置在线状态
+        conn.getRoster({
+           success : function(roster) {
+                  console.log(JSON.stringify(roster))
+                  // 获取当前登录人的好友列表
+                  for ( var i in roster) {
+                    var ros = roster[i]; //好友的对象
+                  //ros.name为好友名称
+                 }
+            }
+        });
+    }
+});
+
+mui.plusReady(function(){
+    var self = plus.webview.currentWebview().parent();
+    var username = self.username;
+    var password = self.password;
+    console.log(&quot;username:&quot;+username+&quot;password:&quot;+password);
+    // 打开连接
+    conn.open({
+        user : username,
+        pwd : password,
+        appKey : Easemob.im.config.appkey
+    });
+});
+</code></pre>
+<p>很显然我们在执行后是空的，因为从开始到现在我们都是自己和自己玩，都没有找朋友，那下面我们就去找朋友，之所以先要把这个先写出来，因为这个我觉得是基本逻辑，你待会儿加了好友，怎么看，就通过这里查询，然后才能说后面的聊天。</p>
+<h4 id="-">添加好友</h4>
+<p>首先我们得去邀请对方吧，那么我们得知道对方的号码吧，上面我们用的是手机号码作为用户名，为的就是保证用户<code>ID</code>唯一性。</p>
+<p><strong>邀请发起方：</strong></p>
+<p>我们通过执行<code>conn.subscribe</code>可以发起邀请，添加发起方，获取要添加好友名称，参数为：</p>
+<pre><code class="lang-js">{
+    to: user,  //对方用户名
+    message:&quot;加个好友呗&quot;  //对方收到的消息
+}
+</code></pre>
+<p>这里我们在头部右上角叫一个添加好友按钮：</p>
+<pre><code class="lang-html">&lt;button id=&quot;addfriend&quot; class=&quot;mui-btn mui-btn-blue mui-btn-link mui-pull-right&quot;&gt;添加&lt;/button&gt;
+</code></pre>
+<p>为了简单演示，我们直接弹出一个输入对话框：</p>
+<pre><code class="lang-js">// 添加好友
+mui(&quot;#addfriend&quot;)[0].addEventListener(&#39;tap&#39;,function(e){
+    e.detail.gesture.preventDefault();
+    var btnArray = [&#39;确定&#39;,&#39;取消&#39;];
+    mui.prompt(&#39;请输入你要添加的好友的用户名：&#39;, &#39;手机号&#39;, &#39;邀请好友&#39;, btnArray, function(e) {
+        if (e.index == 0) {
+            var user = e.value;
+            conn.subscribe({
+                to : user,
+                message : &quot;加个好友呗&quot;
+            });
+            mui.toast(&#39;邀请发送成功！&#39;);
+        } else {
+            mui.toast(&#39;你取消了发送！&#39;);
+        }
+    });
+})
+</code></pre>
+<blockquote>
+<p> 需要说明的是如果添加好友是一个单独的页面，或者说所在页面没有和环信建立连接，依然还有进行前面说的三步连接。</p>
+</blockquote>
+<p><strong>邀请接受方：</strong>
+被添加方，在 con.init 方法中调用 handlePresence 回调方法。</p>
+<pre><code class="lang-js">conn.init({
+    //收到联系人订阅请求的回调方法
+    onPresence : function(message) {
+        handlePresence(message);
+    }
+});
+
+//easemobwebim-sdk中收到联系人订阅请求的处理方法，具体的type值所对应的值请参考xmpp协议规范
+var handlePresence = function(e) {
+    mui.toast(JSON.stringify(e));
+    var user = e.from;
+    //（发送者希望订阅接收者的出席信息）
+    if (e.type == &#39;subscribe&#39;) {
+        mui.confirm(&#39;有人要添加你为好友&#39;, &#39;添加好友&#39;, [&#39;确定&#39;,&#39;取消&#39;], function(e){
+            if (e.index == 0) {
+                //同意添加好友操作的实现方法
+                conn.subscribed({
+                    to : user,
+                    message : &quot;[resp:true]&quot;
+                });
+                mui.toast(&#39;你同意添加好友请求&#39;);
+            } else {
+                //拒绝添加好友的方法处理
+                conn.unsubscribed({
+                    to : user,
+                    message : &quot;rejectAddFriend&quot;
+                });
+                mui.toast(&#39;你拒绝了添加好友&#39;);
+            }
+        })
+    }
+};
+</code></pre>
+<p>前面登陆注册一直很顺利，没啥问题，但是做这个请求好友的时候就出问题了，我们在发送好友请求的时候，然后切换账号登陆的时候接受不到消息。调了好久才发现一些问题：</p>
+<ul>
+<li>我们发送好友的消息在主界面，所以我初始化了连接，接受消息的在子页面也初始化了连接，居然有时候会有提示<code>onflict</code>，有两种方法：第一，主界面不做任何请求的事，点击添加好友时候，父页面给子页面发消息，然后子页面执行请求添加好友；第二，所有的初始化请求放在主界面，然后收到消息给对应的子页面发消息，为了减少请求，个人采用第二种方法。</li>
+<li>当解决上面的冲突问题，为什么登录后收不到消息？这里有个略坑的是环信文档中查询好友时候把<code>onOpened</code>中的这句<code>conn.setPresence();</code>屏蔽了，然后就收不到消息。查文档 <a href="http://docs.easemob.com/im/400webimintegration/80webimfaq">常见问题</a> 中说：
+登录之后需要设置在线状态，才能收到消息。请检查登录成功后是否调用过 conn.setPresence();。
+加上果然没问题了。。。</li>
+</ul>
+<p>剩下的功能我们主要看这个文档 <a href="http://docs.easemob.com/im/400webimintegration/25intiate">初始化连接</a>，主要是说明了初始化时候的一些回调函数的基本用法，我们这里先来看看<code>onPresence</code>，这个是<strong>收到联系人订阅请求的回调方法</strong>，基本数据类型如下：</p>
+<pre><code class="lang-js">{
+    &quot;from&quot;:&quot;xxxxxxxxxxx&quot;,
+    &quot;to&quot;:&quot;yyyyyyyyyyy&quot;,
+    &quot;fromJid&quot;:&quot;jszblog#musicbox_xxxxxxxxxxx@easemob.com&quot;,
+    &quot;toJid&quot;:&quot;jszblog#musicbox_yyyyyyyyyyy@easemob.com&quot;,
+    &quot;type&quot;:&quot;subscribe&quot;,
+    &quot;chatroom&quot;:false,
+    &quot;destroy&quot;:false,
+    &quot;status&quot;:&quot;加个好友呗&quot;
+}
+</code></pre>
+<blockquote>
+<p>这里的xxxxxxxxxxx和yyyyyyyyyyy是电话号码，以为我是用电话作为用户名的，出于隐私保护用字母代替。</p>
+</blockquote>
+<p>当我们切换账号会发现查询好友的地方可以查到好友，下面我们就进行好友列表展示，然后就是和好友聊天咯。</p>
+<h3 id="5-">5.数据绑定和本地缓存处理机制</h3>
+<p>当我们重新登录的时候打印<code>roster</code>时会得到下面的<code>json</code>对象：</p>
+<pre><code class="lang-js">[{
+    &quot;subscription&quot;:&quot;from&quot;,
+    &quot;jid&quot;:&quot;jszblog#musicbox_xxxxxxxxxxx@easemob.com&quot;,
+    &quot;name&quot;:&quot;xxxxxxxxxxx&quot;,
+    &quot;groups&quot;:[]
+}]
+</code></pre>
+<p>为了考虑如果用户没有联网或者数据不能及时更新也能够正常看到历史记录，这里我们考虑做缓存，由于环信<code>web im</code>不具备缓存功能，所以我们这里采用本地存储作为缓存的方案，本地存储可以使用<code>5+</code>中的<code>storage</code>模块，也可以使用<code>localStorage</code>、<code>sessionStorage</code>，由于<code>storage</code>模块中的数据有效域不同，可在应用内跨域操作，数据存储期是持久化的，并且没有容量限制，这里我们采用这个方案，至于如果想把本案例中的例子用于浏览器端的同志，可以采用<code>localStorage</code>作缓存功能。</p>
+<p><code>html5+</code>中的<code>storage</code>模块比较简单，文档中介绍了几个基本方法，具体看看文档就可以学会使用，文档见 <a href="http://www.html5plus.org/doc/zh_cn/storage.html">【storage】</a>。</p>
+<blockquote>
+<p>plus.storage.setItem(key, value);</p>
+</blockquote>
+<p><code>plus.storage.setItem</code>在存储时是以<code>key-value</code>的形式存储，我们可以在查询到好友信息时候，将对象转换成字符串存储在本地，<code>JSON.stringify()</code>将<code>json</code>对象转换成<code>json</code>字符串。</p>
+<pre><code class="lang-js">plus.storage.setItem(&quot;roster&quot;,JSON.stringify(roster));
+</code></pre>
+<blockquote>
+<p>plus.storage.getItem(key);</p>
+</blockquote>
+<p>我们在子页面通过<code>plus.storage.getItem</code>获取存储的字符串，然后通过<code>JSON.parse()</code>将字符串转化成对象获取相关信息。</p>
+<pre><code class="lang-js">var roster = plus.storage.getItem(&quot;roster&quot;);
+var obj = JSON.parse(roster);
+for(var i in obj){
+    console.log(obj[i].name);
+}
+</code></pre>
+<p>我们现在要做的无非是将信息展示出来，但是这里有用的信息目前只有name，毕竟没有上传文件，所以也不存在头像、昵称、签名这种个性化信息。如何把<code>json</code>信息展示出来前面的文章中我们是使用直接生成<code>dom</code>节点或者拼接<code>html</code>字符串，但是这种过于繁琐，当然也有人使用【js模板引擎】，本来准备早点在文章中给一些新手介绍一下<code>vue.js</code>这种<code>MV-*</code>框架，但是考虑本文中实例的性能，暂且还是用之前用过的一个js模板引擎<a href="https://github.com/aui/artTemplate">artTemplate</a>，文档戳这里：<a href="https://github.com/aui/artTemplate。">https://github.com/aui/artTemplate。</a>
+<code>artTemplate</code>有简洁语法版和原生语法版，就是使用语法不一样而已，这里我使用简洁语法版，戳这里下载——  <a href="https://raw.githubusercontent.com/aui/artTemplate/master/dist/template.js">下载地址</a></p>
+<p>为了简单，我们采用模板中通讯录的html结构，文档中有这样的一个例子：</p>
+<p><strong>编写模板：</strong>
+使用一个type=&quot;text/html&quot;的script标签存放模板：</p>
+<pre class="lang-html" ng-non-bindable><code class="lang-html">&lt;script id="test" type="text/html"&gt;
+    &lt;h1&gt;{{title}}&lt;/h1&gt;
+    &lt;ul&gt;
+        {{each list as value i}}
+            &lt;li&gt;索引 {{i + 1}} ：{{value}}&lt;/li&gt;
+        {{/each}}
+    &lt;/ul&gt;
+&lt;/script&gt;
+</code></pre>
+
+<p><strong>渲染模板：</strong></p>
+<pre><code class="lang-js">var data = {
+    title: &#39;标签&#39;,
+    list: [&#39;文艺&#39;, &#39;博客&#39;, &#39;摄影&#39;, &#39;电影&#39;, &#39;民谣&#39;, &#39;旅行&#39;, &#39;吉他&#39;]
+};
+var html = template(&#39;test&#39;, data);
+document.getElementById(&#39;content&#39;).innerHTML = html;
+</code></pre>
+<p>具体语法参考这里：<a href="https://github.com/aui/artTemplate/wiki/syntax:simple">artTemplate 简洁版语法</a></p>
+<p>我们可以这样写：</p>
+<pre><code class="lang-html">&lt;div class=&quot;mui-content&quot;&gt;
+    &lt;!--内容--&gt;
+    &lt;ul id=&quot;roster-cnt&quot; class=&quot;mui-table-view mui-table-view-striped mui-table-view-condensed&quot;&gt;&lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+<pre class="lang-html"><code class="lang-html" ng-non-bindable>&lt;script id="roster-tpl" type="text/template"&gt;
+    {{each roster as value index}}
+        &lt;li class="mui-table-view-cell" data-chatname="{{value.name}}"&gt;
+            &lt;div class="mui-slider-cell"&gt;
+                &lt;div class="oa-contact-cell mui-table"&gt;
+                    &lt;div class="oa-contact-avatar mui-table-cell"&gt;
+                        &lt;img src="http://placehold.it/60x60" /&gt;
+                    &lt;/div&gt;
+                    &lt;div class="oa-contact-content mui-table-cell"&gt;
+                        &lt;div class="mui-clearfix"&gt;
+                            &lt;h4 class="oa-contact-name"&gt;小青年&lt;/h4&gt;
+                            &lt;span class="oa-contact-position mui-h6"&gt;湖北&lt;/span&gt;
+                        &lt;/div&gt;
+                        &lt;p class="oa-contact-email mui-h6"&gt;
+                            {{value.name}}
+                        &lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/li&gt;
+    {{/each}}
+&lt;/script&gt;
+</code></pre>
+
+<pre><code class="lang-js">mui.plusReady(function(){
+    var roster = plus.storage.getItem(&quot;roster&quot;);
+    // console.log(roster);
+    var data = {
+        roster: JSON.parse(roster)
+    }
+    var html = template(&#39;roster-tpl&#39;, data);
+    document.getElementById(&#39;roster-cnt&#39;).innerHTML = html;
+})
+</code></pre>
+<p>我们其实可以直接先遍历找到<code>name</code>然后填充就<code>ok</code>，这为了后续方便添加昵称、地址、头像等个性化地址，直接使用<code>artTemplate</code>的<code>each</code>方法。</p>
+<h3 id="6-">6.聊天消息封装</h3>
+<p>当我们完成了前面登陆、注册、添加好友等功能，我们就进行最重要的内容了，既然是聊天功能，当然要聊起来，不然就不叫<code>IM</code>，但是很多人一开始就太过于关注聊天这个功能，而忽略了前面的基础过程，导致对<code>api</code>不熟悉，自然些聊天过程也是漏洞百出，代码逻辑混乱，所以也就放弃了。本文为即时通讯第一篇，没有介绍过多原理，也没有介绍聊天过程的高级功能，仅作为新手入门的基础篇介绍，后面会再深入探究更多内容。废话不多说，我们继续看文档写下面的内容。</p>
+<p>我们先新建一个<code>single-chat.html</code>，本文不打算基于<code>html mui</code>中的页面去构建聊天页面，打算从零开始写。</p>
+<p>首先我们需要在刚刚那个通讯录页面里面点击进入聊天页面，将用户名的值传到聊天页面，我们可以直接在创建的时候用拓展参数传，或者预加载打开时用<code>mui.fire()</code>,不多说，自己参考第三小节。</p>
+<p>我们先说说布局的问题，先上图</p>
+<p><img src="http://oo1uw74rb.bkt.clouddn.com/20160615002.png" alt="clipboard.png"></p>
+<p>对应的布局详细代码如下：</p>
+<pre><code class="lang-html">&lt;style&gt;
+.chat-history-date{ 
+    display: block;
+    padding-top: 5px;
+    text-align: center;
+    font-size: 12px;
+}
+.chat-receiver,.chat-sender{
+    margin: 5px;
+    clear:both;  
+}
+.chat-avatar img{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+.chat-receiver .chat-avatar{
+    float: left;
+}
+.chat-sender .chat-avatar{
+    float: right;
+}
+.chat-content{
+    position: relative;
+    max-width: 60%;
+    min-height: 20px;
+    margin: 0 10px 10px 10px;
+    padding: 10px;
+    font-size:15px;
+    border-radius:7px; 
+}
+.chat-content img{
+    width: 100%;
+}
+.chat-receiver .chat-content{
+    float: left; 
+    color: #383838; 
+    background-color: #f5f5f5;
+}
+.chat-sender .chat-content{
+    float:right;   
+    color: #ffffff; 
+    background-color: #15b5e9; 
+}
+.chat-triangle{
+    position: absolute;
+    top:6px;
+    width:0px; 
+    height:0px;        
+    border-width:8px; 
+    border-style:solid;   
+}
+.chat-receiver .chat-triangle{ 
+    left:-16px;
+    border-color:transparent #f5f5f5 transparent transparent;      
+}
+.chat-sender .chat-triangle{ 
+    right:-16px;
+    border-color:transparent transparent transparent #15b5e9;      
+}
+&lt;/style&gt;
+
+&lt;!--消息最后历史时间--&gt;
+&lt;p class=&quot;chat-history-date&quot;&gt;01:59&lt;/p&gt;
+&lt;!--接收文本消息--&gt;
+&lt;div class=&quot;chat-receiver&quot;&gt;
+    &lt;div class=&quot;chat-avatar&quot;&gt;
+          &lt;img src=&quot;../img/chat-1.png&quot;&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;chat-content&quot;&gt;
+          &lt;div class=&quot;chat-triangle&quot;&gt;&lt;/div&gt;
+          &lt;span&gt;如果是接受消息，请使用.chat-receiver类，如果是发送消息，请使用.chat-sender，头像是.chat-avatar类，内容是.chat-content类。.chat-content下如果是span标签则为文本消息，若为img标签则为图片消息。&lt;/span&gt;
+      &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--发送文本消息--&gt;
+&lt;div class=&quot;chat-sender&quot;&gt;
+      &lt;div class=&quot;chat-avatar&quot;&gt;
+          &lt;img src=&quot;../img/chat-2.png&quot;&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;chat-content&quot;&gt;
+          &lt;div class=&quot;chat-triangle&quot;&gt;&lt;/div&gt;
+          &lt;span&gt;如果你要修改聊天气泡的背景颜色，请修改.chat-content的background-color和.chat-triangle的border-color&lt;/span&gt;
+      &lt;/div&gt;
+&lt;/div&gt;
+&lt;!--发送图片消息--&gt;
+&lt;div class=&quot;chat-sender&quot;&gt;
+      &lt;div class=&quot;chat-avatar&quot;&gt;
+          &lt;img src=&quot;../img/chat-2.png&quot;&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;chat-content&quot;&gt;
+          &lt;div class=&quot;chat-triangle&quot;&gt;&lt;/div&gt;
+          &lt;img src=&quot;../img/test.jpg&quot;/&gt;
+      &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>我们的消息分为发送和收到两种情况，上面是静态效果，我们下面需要做的事获取数据然后动态展示，现在我们先封装一下页面展示效果的代码。这里我们使用两种方法，一种是直接用<code>js</code>生成<code>dom</code>节点，这种使用于结构固定后面不需要改动的，直接用一个<code>js function</code>封装，每次调用一行代码就可以直接显示内容，这样想想都觉得很棒。</p>
+<p>老司机，别说话，快看代码！</p>
+<pre><code class="lang-js">/**
+ * @description 显示消息
+ * @param {String} who 消息来源,可选参数: {params} &#39;sender&#39;,&#39;receiver&#39;
+ * @param {Object} type 消息类型,可选参数: {params} &#39;text&#39;,&#39;url&#39;,&#39;img&#39;
+ * @param {JSON} data 消息数据,可选参数: {params} 
+ * (&#39;text&#39;和&#39;url&#39;类型的msg是文字，img类型的msg是img地址)
+ */
+var appendMsg = function(who,type,data) {
+    // 生成节点
+    var domCreat = function(node){
+        return document.createElement(node)
+    };
+
+    // 基本节点
+    var msgItem = domCreat(&quot;div&quot;),
+        avatarBox = domCreat(&quot;div&quot;),
+        contentBox = domCreat(&quot;div&quot;),
+        avatar = domCreat(&quot;img&quot;),
+        triangle = domCreat(&quot;div&quot;);
+
+    // 头像节点
+    avatarBox.className=&quot;chat-avatar&quot;;
+    avatar.src = (who==&quot;sender&quot;)?data.senderAvatar:data.receiverAvatar;
+    avatarBox.appendChild(avatar);
+
+    // 内容节点
+    contentBox.className=&quot;chat-content&quot;;
+    triangle.className=&quot;chat-triangle&quot;;
+    contentBox.appendChild(triangle);
+
+    // 消息类型
+    switch (type){
+        case &quot;text&quot;:
+            var msgTextNode = domCreat(&quot;span&quot;);
+            var textnode=document.createTextNode(data.msg);
+            msgTextNode.appendChild(textnode);
+            contentBox.appendChild(msgTextNode);
+            break;
+        case &quot;url&quot;:
+            var msgUrlNode = domCreat(&quot;a&quot;);
+            var textnode=document.createTextNode(data.msg);
+            if(data.indexOf(&#39;http://&#39;) &lt; 0){
+                data.msg = &quot;http://&quot; + data.msg;
+            }
+            msgUrlNode.setAttribute(&quot;href&quot;,data.msg); 
+            msgUrlNode.appendChild(textnode);
+            contentBox.appendChild(msgUrlNode);            
+            break;
+        case &quot;img&quot;:
+            var msgImgNode = domCreat(&quot;img&quot;);
+            msgImgNode.src = data.msg;
+            contentBox.appendChild(msgImgNode);
+            break;
+        default:
+            break;
+    }
+
+    // 节点连接
+    msgItem.className=&quot;chat-&quot;+who;
+    msgItem.appendChild(avatarBox);
+    msgItem.appendChild(contentBox);
+    document.querySelector(data.el).appendChild(msgItem);
+}
+</code></pre>
+<p>其实后面我们拓展也很容易的，只需要不断加<code>type</code>类型就<code>ok</code>，这些都是<code>dom</code>操作的基本方法，如果对一些方法不熟悉，建议看看相关的内容。这里遵照<code>JSDoc+</code>规范还加上了使用参数提示，在<code>hbuilder</code>使用可以查看参数含义，再也不用担心写代码时忘记了参数含义。</p>
+<p>这里我们也可以用模板引擎的办法去封装，代码如下：</p>
+<p><strong>模板内容：</strong></p>
+<pre class="lang-html" ng-non-bindable><code class="lang-html">&lt;script id="msg-tpl" type="text/html"&gt;
+    &lt;div class="chat-{{who}}"&gt;
+        &lt;div class="chat-avatar"&gt;
+            &lt;img src="{{avatar}}"&gt;
+        &lt;/div&gt;
+        &lt;div class="chat-content"&gt;
+            &lt;div class="chat-triangle"&gt;&lt;/div&gt;
+            {{if type=="text"}}
+                &lt;span&gt;{{msg}}&lt;/span&gt;
+            {{else if type=="url"}}
+                &lt;a href="{{msg}}"&gt;{{msg}}&lt;/a&gt;
+            {{else if type=="img"}}
+                &lt;img src="{{msg}}"/&gt;
+            {{/if}}
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/script&gt;
+</code></pre>
+
+<p><strong>模板渲染：</strong></p>
+<pre><code class="lang-js">/**
+ * @description 显示消息
+ * @param {String} who 消息来源,可选参数: {params} &#39;sender&#39;,&#39;receiver&#39;
+ * @param {Object} type 消息类型,可选参数: {params} &#39;text&#39;,&#39;url&#39;,&#39;img&#39;
+ * @param {JSON} data 消息数据,可选参数: {params} 
+ * (&#39;text&#39;和&#39;url&#39;类型的msg是文字，img类型的msg是img地址)
+ */
+var appendMsg = function(who,type,data){
+    var html = template(&#39;msg-tpl&#39;, {
+        who: who,
+        type: type,
+        avatar: who==&#39;sender&#39;?data.senderAvatar:data.receiverAvatar,
+        msg: data.msg
+    });
+    document.querySelector(data.el).innerHTML += html;
+}
+</code></pre>
+<p>大家使用也很简单，调用方法如下：</p>
+<pre><code class="lang-js">appendMsg(&#39;sender&#39;,&#39;text&#39;,{
+    el: &#39;#msg-list&#39;, //消息容器
+    senderAvatar: &#39;../img/chat-1.png&#39;,  //发送者头像
+    receiverAvatar: &#39;../img/chat-2.png&#39;, //接收者头像
+    msg: &#39;你好&#39; //消息内容
+})
+</code></pre>
+<p>如果大家觉得每次调用还要填写容器id，头像地址这种基本固定的内容很麻烦，大家也可以继续封装：</p>
+<pre><code class="lang-js">/**
+ * 消息初始化
+ */
+var msgInit = {
+    el: &#39;#msg-list&#39;, //消息容器
+    senderAvatar: &#39;../img/chat-1.png&#39;,  //发送者头像
+    receiverAvatar: &#39;../img/chat-2.png&#39; //接收者头像
+}
+
+/**
+ * @description 展示消息精简版
+ * @param {String} who 消息来源,可选参数: {params} &#39;sender&#39;,&#39;receiver&#39;
+ * @param {Object} type 消息类型,可选参数: {params} &#39;text&#39;,&#39;url&#39;,&#39;img&#39;
+ * @param {Object} msg (&#39;text&#39;和&#39;url&#39;类型的msg是文字，img类型的msg是img地址)
+ */
+var msgShow = function(who,type,msg){
+    appendMsg(who,type,{
+        el: msgInit.el,
+        senderAvatar: msgInit.senderAvatar,
+        receiverAvatar: msgInit.receiverAvatar,
+        msg: msg
+    });
+}
+</code></pre>
+<p>调用方法很简单：</p>
+<pre><code class="lang-js">msgShow(&#39;sender&#39;,&#39;text&#39;,&#39;你好&#39;);
+</code></pre>
+<p>两种方法实现封装的函数一样，这里只是给大家演示一下对于这种动态结构的<code>html</code>的一些方法，当然只要你愿意，你可以直接用字符串拼接，或者用<code>&lt;template&gt;&lt;/template&gt;</code>标签自己做一个这样的模板引擎，或者使用使用更加方便的<code>mvc</code>或<code>mvvm</code>框架。</p>
+<p>之所以要花大篇幅内容将这些基础内容，是因为看到很多人代码写得那叫一个混乱，如果接口啥的一改，我相信这些人会疯掉，因为代码缺乏一定的通用性，没有把变与不变的内容分别拿出来。当然我们上面其实有些东西没有封装进去，比如用户名或者昵称，这在群聊中是有必要的，这里只是以最简单的例子来说明，大家可以根据自己的业务需求自由发挥。</p>
+<h3 id="7-">7.单聊之文本消息</h3>
+<h4 id="-">基本思路</h4>
+<p>其实写到这里本篇基本也算告一段落，但是考虑到很多新手对于收发消息很多还是有一些问题，我们这里就还是把文本消息发送接收写完了再收篇。</p>
+<p>上面我们我们讲了怎么把消息展示出来，但是毕竟聊起来数据是动态的，那么发送接收数据是很重要的一步，先来写发送消息。我们先定义一个底部的输入框加按钮，代码如下：</p>
+<pre><code class="lang-html">&lt;style type=&quot;text/css&quot;&gt;
+footer {
+    position: fixed;
+    width: 100%;
+    height: 50px;
+    min-height: 50px;
+    border-top: solid 1px #bbb;
+    left: 0px;
+    bottom: 0px;
+    overflow: hidden;
+    padding: 0px 50px;
+    background-color: #fafafa;
+}
+.footer-left {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    left: 0px;
+    bottom: 0px;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 100%;
+    padding: 12px 4px;
+}
+.footer-right {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    right: 0px;
+    bottom: 0px;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 100%;
+    padding: 12px 5px;
+    display: inline-block;
+}
+.footer-center {
+    height: 100%;
+    padding: 5px 0px;
+}
+.footer-center [class*=input] {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+}
+.footer-center .input-text {
+    background: #fff;
+    border: solid 1px #ddd;
+    padding: 10px !important;
+    font-size: 16px !important;
+    line-height: 18px !important;
+    font-family: verdana !important;
+    overflow: hidden;
+}
+
+footer .mui-icon {
+        color: #000;
+}
+footer .mui-icon:active {
+    color: #007AFF !important;
+}
+.footer-right span{
+    color: #0062CC;
+    line-height: 30px;
+}
+&lt;/style&gt;
+&lt;div class=&quot;mui-content&quot;&gt;
+    &lt;div id=&quot;msg-list&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;footer&gt;
+    &lt;div class=&quot;footer-left&quot;&gt;
+        &lt;i id=&#39;msg-choose-img&#39; class=&quot;mui-icon mui-icon-camera&quot; style=&quot;font-size: 28px;&quot;&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;footer-center&quot;&gt;
+        &lt;textarea id=&#39;msg-text&#39; type=&quot;text&quot; class=&#39;input-text&#39;&gt;&lt;/textarea&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;footer-right&quot;&gt;
+        &lt;span id=&#39;msg-send-text&#39;&gt;发送&lt;/span&gt;
+    &lt;/div&gt;
+&lt;/footer&gt;
+</code></pre>
+<p>为了代码整洁规范，方便后期封装，参考<code>hello mui</code>中<code>im-chat.html</code>的写法，我们先定义一下<code>ui</code>控件对象：</p>
+<pre><code class="lang-js">// UI控件对象
+var ui = {
+    content: mui(&#39;.mui-content&#39;[0]),
+    msgList: mui(&#39;#msg-list&#39;)[0],
+    footer: mui(&#39;footer&#39;)[0],
+    msgChooseImg: mui(&quot;#msg-choose-img&quot;)[0],
+    msgText: mui(&#39;#msg-text&#39;)[0],
+    msgSendText: mui(&#39;#msg-send-text&#39;)[0]
+}
+</code></pre>
+<p>发送文本消息很简单：</p>
+<pre><code class="lang-js">// 发送文本消息
+ui.msgSendText.addEventListener(&#39;tap&#39;,function(){
+    sendText();
+})
+
+// 发送文本
+var sendText = function(){
+    var msg = ui.msgText.value.replace(new RegExp(&#39;\n&#39;, &#39;gm&#39;), &#39;&lt;br/&gt;&#39;);
+    var validateReg = /^\S+$/;
+    // 获得键盘焦点
+    msgTextFocus();
+    if(validateReg.test(msg)){
+        // 消息展示出来
+        msgShow(&#39;sender&#39;,&#39;text&#39;,msg);
+        // 发送文本消息到环信服务器
+        conn.sendTextMessage({
+            to: chatName, //用户登录名，SDK根据AppKey和domain组织jid，如easemob-demo#chatdemoui_**TEST**@easemob.com，中&quot;to:TEST&quot;,下同
+            msg: msg, //文本消息
+            type: &quot;chat&quot;
+            //ext :{&quot;extmsg&quot;:&quot;extends messages&quot;}//用户自扩展的消息内容（群聊用法相同）
+        });    
+        // 清空文本框
+        ui.msgText.value = &#39;&#39;;
+        // 恢复输入框高度(因为我们这里是50px，你可以写一个全局变量)
+        ui.footer.style.height = &#39;50px&#39;;
+        // 保持输入状态
+        mui.trigger(ui.msgText, &#39;input&#39;, null);
+        // 这一句让内容滚动起来
+        msgScrollTop();
+    }else{
+        mui.toast(&quot;文本消息不能为空&quot;);
+    }
+}
+</code></pre>
+<p>这里的<code>msgTextFocus();</code>和<code>msgScrollTop();</code>是封装的两个方法，具体的且看下文。</p>
+<p>再来说说收消息，我们需要在<code>conn.init()</code>配置设置收到消息的回调函数<code>onTextMessage</code>:</p>
+<pre><code class="lang-js">// 初始化连接
+conn.init({
+    onOpened : function(){
+        //mui.toast(&quot;成功登录&quot;);
+        conn.setPresence();
+    },
+    // 收到文本消息时的回调函数
+    onTextMessage : function(message) {
+        // console.log(JSON.stringify(message));
+        var from = message.from;//消息的发送者
+        var msg = message.data;//文本消息体    
+        //mui.toast(msg);
+        // 收到文本消息在页面展示
+        msgShow(&#39;receiver&#39;,&#39;text&#39;,msg);
+        msgScrollTop();
+    },
+    // 收到图片消息时的回调函数
+    onPictureMessage : function(message) {
+        handlePictureMessage(message);
+    }
+});
+</code></pre>
+<p>至此我们完成了基本的文本消息收发功能，但是有几个细节是需要处理的，比如我们上面说的两个函数啥意思，我们没有解释。</p>
+<h4 id="-">获得输入框焦点事件和强制弹出软键盘</h4>
+<p>我们如果不做处理，在输入框失去焦点时软键盘会自动收回软键盘，这样很影响聊天时候的用户体验。这个时候我们可以在输入完内容，准备发送时，保持输入状态<code>mui.trigger(ui.msgText, &#39;input&#39;, null);</code>。</p>
+<p>让输入框获得焦点的方法：</p>
+<pre><code class="lang-js">// 获得输入框键盘焦点
+var msgTextFocus = function(){
+    ui.msgText.focus();
+    setTimeout(function() {
+        ui.msgText.focus();
+    }, 150);
+}
+</code></pre>
+<p>强制弹出软键盘的方法：</p>
+<pre><code class="lang-js">// 强制弹出软键盘
+var showKeyboard = function() {
+    if (mui.os.ios) {
+        var webView = plus.webview.currentWebview().nativeInstanceObject();
+        webView.plusCallMethod({
+            &quot;setKeyboardDisplayRequiresUserAction&quot;: false
+        });
+    } else if(mui.os.android) {
+        var Context = plus.android.importClass(&quot;android.content.Context&quot;);
+        var InputMethodManager = plus.android.importClass(&quot;android.view.inputmethod.InputMethodManager&quot;);
+        var main = plus.android.runtimeMainActivity();
+        var imm = main.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(0,InputMethodManager.SHOW_FORCED);
+    }
+};
+</code></pre>
+<h4 id="-">聊天消息高度调整</h4>
+<p>聊天消息如何发送或者收到一条自己往上滚动呢？我们看qq消息就是最后一条消息就会自动出现在输入框之上，调整方法是使用<code>scrollTop</code>方法，通过计算<code>scrollHeight</code>和`offsetHeight的高度，实现调整。对这些高度不理解？看这里：</p>
+<ul>
+<li><p><a href="http://www.cnblogs.com/polk6/p/5051935.html">HTML 获取屏幕、浏览器、页面的高度宽度</a></p>
+</li>
+<li><p><a href="http://ask.dcloud.net.cn/article/205">深入理解高度。获取屏幕、webview、软键盘高度</a></p>
+</li>
+</ul>
+<p>其实这个地方有很多技术细节，比如消息高度虽然可以获取，但是要实现局部滚动，那么必须禁止浏览器默认的滚动模式，具体可以看看这篇文章的实现原理<a href="https://isux.tencent.com/inner-scroll-layout.html">浅议内滚动布局</a></p>
+<p>具体css样式设置方法：</p>
+<pre><code class="lang-html">html,
+body {
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow: hidden;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
+.mui-content{
+    height: 100%;
+    padding: 44px 0px 50px 0px;
+    overflow: auto;
+    background-color: #eaeaea;
+}
+#msg-list {
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+</code></pre>
+<p>调用的函数封装如下：</p>
+<pre><code class="lang-js">// 消息滚动
+var msgScrollTop = function(){
+    ui.msgList.scrollTop = ui.msgList.scrollHeight + ui.msgList.offsetHeight;
+}
+</code></pre>
+<h4 id="-">输入框高度如何自适应</h4>
+<p>不多说直接上代码：</p>
+<pre><code class="lang-js">// 输入框监听事件
+ui.msgText.addEventListener(&#39;input&#39;, function(event) {
+    msgTextFocus();
+    ui.footer.style.height = this.scrollHeight + &#39;px&#39;;
+});
+</code></pre>
+<h4 id="-">解决长按导致致键盘关闭的问题</h4>
+<pre><code class="lang-js">// 解决长按“发送”按钮，导致键盘关闭的问题；
+ui.msgSendText.addEventListener(&#39;touchstart&#39;, function(event) {
+    msgTextFocus();
+    event.preventDefault();
+});
+ui.msgSendText.addEventListener(&#39;touchmove&#39;, function(event) {
+    msgTextFocus();
+    event.preventDefault();
+});
+</code></pre>
+<p>当做到这里我们基本要讲解的够新手去理解了，但是对于项目功能实现来说，远远不够，毕竟只是文字发送接收，那么图片、语音、地址等等高级功能呢，我们这篇文章限于篇幅不可能一一道来，只能后面再做补充。这里希望更多人参与到其中进行贡献。这里可以放出地址了，详情代码请关注这里：<a href="https://github.com/zhaomenghuan/mui-demo/tree/master/easemobIM">https://github.com/zhaomenghuan/mui-demo/tree/master/easemobIM</a>。后期功能拓展和bug修复都贵提交到这里，欢迎大家贡献。</p>
+<h2 id="-">写在后面</h2>
+<p>由于这段时间确实有点忙，这篇文章也花了很多时间去码字，去修改，改了很多次，才有这篇文章，希望能够给新手一些启示和帮助吧！本文不是着重讲环信sdk怎么用，而是讲解这个过程中可能会遇到的一些问题和实现思路，所以不建议新手直接拿最后的代码改之类的，还是看懂了思路再说，所以至于这个IM更多的功能后期会不会继续开发，暂时是未知数，所以大家不要等待，欢迎大神多多贡献分享相关代码，这样方便更多人学习使用。</p>
+<p>这里想和大家简单说下，不要所有的问题直接私聊我，我时间精力有限，个人觉得不回复不好，所以我不会看到消息装着没看到，但是也不可能一一去回复，毕竟时间精力上也有限，我也需要不断学习，所以不希望过多的被打扰。大家有问题建议去论坛先搜搜答案，看看官方文档自己解决，大家确实有解决不了的问题，可以在群里寻求帮助或者给我发消息。提问前建议把问题描述清楚，想要实现什么，然后现在的实现思路，最好附上代码说明或者发测试文件，这样也方便解决问题。很多人说直接是直接是根据官方demo改的，说啥bug，很多时候聊到最后发现是他自己的原因，这种情况真的很浪费彼此时间。在此声明以后一上来直接要帮忙写代码的，或者让我发一遍文档地址的等等这种可以自己可以解决的问题，请原谅我直接果断拒绝，我理解新手理解小白初入门的盲目，但是建议不要去依赖，要自己去尝试，不懂再问，不要还没有去了解去查资料，直接一上来求带这种要求。</p>
+<p><img src="https://segmentfault.com/img/bVycIN" alt="clipboard.png"></p>
+<hr>
+<p>如果有项目需求，欢迎私聊。承接各种前端项目，同时如果有功能定制，代码优化等需求也可以商量，算发个小广告吧，毕竟我也要生活，要挣钱娶媳妇养家糊口。</p>
+<p>写文章不容易，也许写这些代码就几十分钟的事，写一篇大家好接受的文章或许需要几天的酝酿，然后加上几天的码字，累并快乐着。如果文章对您有帮助请我喝杯咖啡吧！进行赞助的同学私信留下你们的联系方式，后期发文章会单独邮件通知，有开发的问题也可以私聊，有相关功能需求，可以考虑优先写文分享。在此特别感谢之前给予赞助的同学，名单有保存，后期在博客会有公示。</p>

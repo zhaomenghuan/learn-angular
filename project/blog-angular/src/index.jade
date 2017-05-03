@@ -1,0 +1,45 @@
+doctype html
+html(lang="zh", ng-app="app", ng-cloak)
+    head
+        title {{app.title}}
+        meta(charset='utf-8')
+        meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1')
+        link(rel="shortcut icon", href="favicon.ico")
+        link(rel='stylesheet', href='css/lib.min.css')
+        link(rel='stylesheet', href='css/all.min.css')
+    body
+        div.loading-mask(ng-show="loadingPromise")
+            md-progress-circular(md-diameter="96")
+
+        md-sidenav.md-sidenav-left(md-component-id="left", md-whiteframe="4")
+            md-toolbar.md-theme-indigo
+                h1.md-toolbar-tools 关于我
+            md-content(layout-padding)
+                md-button(ng-click="close()" class="md-primary") Close Sidenav Left
+                p hello zhaomengh
+
+        div.app-main(role="main")
+            header.header
+                div.container-inner(layout="row")
+                    div(flex-order-gt-xs="100", flex="30")
+                        img.logo(ng-src="./assets/images/logo.png", ng-click="toggleLeftSidenav()")
+                        h1.name {{app.name}}
+                        div.slogan {{app.slogan}}
+
+                    md-nav-bar(flex-order-gt-xs="100", flex="70", md-selected-nav-item="currentNavItem", nav-bar-aria-label="app-navigation-links")
+                        md-nav-item(md-nav-sref="index", name="index") 首页
+                        md-nav-item(md-nav-sref="blog", name="blog") 博文
+                        // md-nav-item(md-nav-sref="note", name="note") 笔记
+                        // md-nav-item(md-nav-sref="recommend", name="recommend") 推荐
+                        // md-nav-item(md-nav-sref="tool", name="tool") 工具
+                        // md-nav-item(md-nav-sref="case", name="case") 案例
+                        // md-nav-item(md-nav-sref="about", name="about") 关于
+                        // md-nav-item(md-nav-sref="login", name="login") 注册 · 登录
+
+            md-content.container-inner.md-padding
+                section(ui-view, ng-cloak)
+
+            div.copyright(ng-cloak) Copyright© 2017 小青年 版权所有.
+
+        script(src='js/lib.min.js')
+        script(src='js/all.min.js')

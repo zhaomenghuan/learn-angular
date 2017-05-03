@@ -1,0 +1,131 @@
+@import url('../../assets/styles/github-markdown.less');
+@import url('../../assets/styles/color.less');
+
+.blog {
+  padding: 20px;
+  background-color: #fff;
+
+  .list {
+    md-list-item {
+      margin-left: 10px;
+      padding: 0;
+      h2.title {
+        margin-left: 0;
+        text-indent: -15px;
+      }
+    }
+    .md-list-item-text h3.time {
+      float: right;
+      margin: 10px;
+    }
+    .md-list-item-text .digest {
+      clear: both;
+      text-indent: 2em;
+    }
+    md-chips .md-chips {
+      outline: none;
+      box-shadow: none;
+      span {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .detail {
+    max-width: 980px;
+    margin: 0 auto;
+    md-toolbar {
+      margin: 15px 0 0;
+      background-color: @main-color;
+    }
+    .md-inline-form {
+      overflow-x: hidden;
+    }
+    .back {
+      max-width: 980px;
+      margin: 30px auto;
+      outline: none;
+      cursor: pointer;
+      img {
+        float: left;
+        margin-right: 10px;
+        height: 40px;
+        vertical-align: bottom;
+      }
+      span {
+        font-size: 18px;
+        line-height: 40px;
+      }
+    }
+
+    .focus {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 10px;
+      color: #383838;
+      ul {
+        list-style: none;
+        li {
+          line-height: 30px;
+          a {
+            color: #383838;
+          }
+        }
+      }
+    }
+
+    .donation img{
+      max-width: 100%;
+      display: block;
+      margin: 10px auto;
+    }
+
+    .submit {
+      color: #fff;
+      background-color: @main-color;
+    }
+
+    .comments-list {
+      .md-list-item-text {
+        margin-bottom: 15px;
+        h3 span {
+          line-height: 30px;
+        }
+        a {
+          color: #383838;
+          text-decoration: none;
+        }
+        .name {
+          font-weight: 600;
+          font-size: 16px;
+        }
+        .time {
+          margin-left: 15px;
+          font-size: 14px;
+          color: #999;
+        }
+        p {
+          font-size: 14px;
+          line-height: 30px;
+        }
+        .action-btn {
+          float: right;
+          margin-left: 10px;
+          cursor: pointer;
+          img {
+            width: 15px;
+            margin-top: 7.5px;
+            margin-right: 5px;
+          }
+          span {
+            line-height: 30px;
+          }
+        }
+        .reply-list {
+          color: #383838;
+          background-color: #eee;
+        }
+      }
+    }
+  }
+}

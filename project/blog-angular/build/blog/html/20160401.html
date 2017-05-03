@@ -1,0 +1,224 @@
+<h1 id="-github-git-">走近github王国，git入门教程</h1>
+<blockquote>
+<ul>
+<li><strong>文章来源：小青年原创</strong></li>
+<li><strong>发布时间：2016-04-01</strong></li>
+<li><strong>关键词：git,github</strong></li>
+<li><strong>转载请标注：<a href="http://zhaomenghuan.github.io/!#/blog/20160401">http://zhaomenghuan.github.io/!#/blog/20160401</a></strong></li>
+</ul>
+</blockquote>
+<h2 id="-">写在前面</h2>
+<p>一个稳定简单，空间大，关注度高的博客分享平台是提高博客浏览量的必要条件，当然内容充实才是关键，废话不多说，今天我们就来搞定git和github，相信程序猿们都懂。</p>
+<h2 id="-">简介</h2>
+<h3 id="git">GIT</h3>
+<blockquote>
+<p>Git是一款免费、开源的分布式版本控制系统，用于敏捷高效地处理任何或小或大的项目。Git的读音为/gɪt/。
+Git是一个开源的分布式版本控制系统，用以有效、高速的处理从很小到非常大的项目版本管理。Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个开放源码的版本控制软件。</p>
+</blockquote>
+<ul>
+<li>官网：<a href="https://git-scm.com/">https://git-scm.com/</a></li>
+<li>Git教程:<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/">廖雪峰的官方网站</a></li>
+</ul>
+<h3 id="github">github</h3>
+<blockquote>
+<p>作为开源代码库以及版本控制系统，Github拥有140多万开发者用户。随着越来越多的应用程序转移到了云上，Github已经成为了管理软件开发以及发现已有代码的首选方法。
+GitHub可以托管各种git库，并提供一个web界面，但与其它像 SourceForge或Google Code这样的服务不同，GitHub的独特卖点在于从另外一个项目进行分支的简易性。为一个项目贡献代码非常简单：首先点击项目站点的“fork”的按钮，然后将代码检出并将修改加入到刚才分出的代码库中，最后通过内建的“pull request”机制向项目负责人申请代码合并。已经有人将GitHub称为代码玩家的MySpace。</p>
+</blockquote>
+<ul>
+<li>官网：<a href="https://github.com/">https://github.com/</a></li>
+</ul>
+<h2 id="-">准备环节</h2>
+<h3 id="git-">Git 安装配置</h3>
+<ul>
+<li>在使用Git前我们需要先安装 Git。Git 目前支持 Linux/Unix、Solaris、Mac和 Windows 平台上运行。Git 各平台安装包下载地址为：<a href="http://git-scm.com/downloads。">http://git-scm.com/downloads。</a></li>
+<li>安装教程：<a href="https://git-scm.com/book/zh/v2/起步-安装-Git">https://git-scm.com/book/zh/v2/起步-安装-Git</a></li>
+<li>完成安装之后，就可以使用命令行的 git 工具（已经自带了 ssh 客户端）了，另外还有一个图形界面的 Git 项目管理工具。在开始菜单里找到&quot;Git&quot;-&gt;&quot;Git Bash&quot;，会弹出 Git 命令窗口，你可以在该窗口进行 Git 操作。</li>
+<li><p>Git 提供了一个叫做 git config 的工具，专门用来配置或读取相应的工作环境变量。这些环境变量，决定了 Git 在各个环节的具体工作方式和行为。这些变量可以存放在以下三个不同的地方：</p>
+<ul>
+<li>/etc/gitconfig 文件：系统中对所有用户都普遍适用的配置。若使用 git config 时用 --system 选项，读写的就是这个文件。</li>
+<li>~/.gitconfig 文件：用户目录下的配置文件只适用于该用户。若使用 git config 时用 --global 选项，读写的就是这个文件。</li>
+<li>当前项目的 Git 目录中的配置文件（也就是工作目录中的 .git/config 文件）：这里的配置仅仅针对当前项目有效。每一个级别的配置都会覆盖上层的相同配置，所以 .git/config 里的配置会覆盖 /etc/gitconfig 中的同名变量。</li>
+</ul>
+</li>
+<li><p>在 Windows 系统上，Git 会找寻用户主目录下的 .gitconfig 文件。主目录即 $HOME 变量指定的目录，一般都是 C:\Documents and Settings\$USER。此外，Git 还会尝试找寻 /etc/gitconfig 文件，只不过看当初 Git 装在什么目录，就以此作为根目录来定位。</p>
+</li>
+</ul>
+<h3 id="-">用户信息</h3>
+<p>配置个人的用户名称和电子邮件地址：</p>
+<pre><code class="lang-js">git config --global user.name &quot;zhaomenghuan&quot;
+git config --global user.email 1028317108@qq.com
+</code></pre>
+<p>如果用了 --global 选项，那么更改的配置文件就是位于你用户主目录下的那个，以后你所有的项目都会默认使用这里配置的用户信息。
+如果要在某个特定的项目中使用其他名字或者电邮，只要去掉 --global 选项重新配置即可，新的设定保存在当前项目的 .git/config 文件里。</p>
+<h3 id="-">查看配置信息</h3>
+<p>要检查已有的配置信息，可以使用 <strong><a href="">$ git config --list</a></strong> 命令：</p>
+<pre><code class="lang-js">core.symlinks=false
+core.autocrlf=true
+color.diff=auto
+color.status=auto
+color.branch=auto
+color.interactive=true
+help.format=html
+http.sslcainfo=f:/Program Files/Git/mingw64/ssl/certs/ca-bundle.crt
+diff.astextplain.textconv=astextplain
+rebase.autosquash=true
+credential.helper=manager
+user.name=zhaomenghuan
+user.email=1028317108@qq.com
+gui.recentrepo=E:/coding/zhaomenghuan/github
+</code></pre>
+<p>也可以直接查阅某个环境变量的设定，只要把特定的名字跟在后面即可，像这样：</p>
+<pre><code class="lang-js">git config user.name
+</code></pre>
+<h2 id="git-">Git工作流程详解</h2>
+<h3 id="git-">Git一般工作流程</h3>
+<ul>
+<li>克隆 Git 资源作为工作目录。</li>
+<li>在克隆的资源上添加或修改文件。</li>
+<li>如果其他人修改了，你可以更新资源。</li>
+<li>在提交前查看修改。</li>
+<li>提交修改。</li>
+<li>在修改完成后，如果发现错误，可以撤回提交并再次修改并提交。</li>
+</ul>
+<p><img src="http://i.imgur.com/9j50UxS.png" alt=""></p>
+<h3 id="git-">Git 工作区、暂存区和版本库</h3>
+<p>我们先来理解下Git 工作区、暂存区和版本库概念</p>
+<ul>
+<li>工作区：就是你在电脑里能看到的目录。</li>
+<li>暂存区：英文叫stage, 或index。一般存放在&quot;git目录&quot;下的index文件（.git/index）中，所以我们把暂存区有时也叫作索引（index）。</li>
+<li>版本库：工作区有一个隐藏目录.git，这个不算工作区，而是Git的版本库。</li>
+</ul>
+<p><img src="http://www.runoob.com/wp-content/uploads/2015/02/1352126739_7909.jpg" alt=""></p>
+<blockquote>
+<p>图中左侧为工作区，右侧为版本库。在版本库中标记为 &quot;index&quot; 的区域是暂存区（stage, index），标记为 &quot;master&quot; 的是 master 分支所代表的目录树。图中我们可以看出此时 &quot;HEAD&quot; 实际是指向 master 分支的一个&quot;游标&quot;。所以图示的命令中出现 HEAD 的地方可以用 master 来替换。图中的 objects 标识的区域为 Git 的对象库，实际位于 &quot;.git/objects&quot; 目录下，里面包含了创建的各种对象及内容。</p>
+</blockquote>
+<ul>
+<li>当对工作区修改（或新增）的文件执行 <code>git add</code>命令时，暂存区的目录树被更新，同时工作区修改（或新增）的文件内容被写入到对象库中的一个新的对象中，而该对象的ID被记录在暂存区的文件索引中。</li>
+<li>当执行提交操作 <code>git commit</code> 时，暂存区的目录树写到版本库（对象库）中，master 分支会做相应的更新。即 master 指向的目录树就是提交时暂存区的目录树。</li>
+<li>当执行 <code>git reset HEAD</code> 命令时，暂存区的目录树会被重写，被 master 分支指向的目录树所替换，但是工作区不受影响。</li>
+<li>当执行 <code>git rm --cached &lt;file&gt;</code> 命令时，会直接从暂存区删除文件，工作区则不做出改变。</li>
+<li>当执行 <code>git checkout .</code> 或者 <code>git checkout -- &lt;file&gt;</code> 命令时，会用暂存区全部或指定的文件替换工作区的文件。这个操作很危险，会清除工作区中未添加到暂存区的改动。</li>
+<li>当执行 <code>git checkout HEAD .</code> 或者 <code>git checkout HEAD &lt;file&gt;</code> 命令时，会用 HEAD 指向的 master 分支中的全部或者部分文件替换暂存区和以及工作区中的文件。这个命令也是极具危险性的，因为不但会清除工作区中未提交的改动，也会清除暂存区中未提交的改动。</li>
+</ul>
+<h2 id="-">常用命令说明</h2>
+<blockquote>
+<p><strong>git init （初始化仓库）</strong></p>
+</blockquote>
+<p>git 使用 git init 命令来初始化一个 Git 仓库，Git 的很多命令都需要在 Git 的仓库中运行，所以 git init 是使用 Git 的第一个命令。在执行完成 git init 命令后，Git 仓库会生成一个 .git 目录，该目录包含了资源的所有元数据，其他的项目目录保持不变（不像 SVN 会在每个子目录生成 .svn 目录，Git 只在仓库的根目录生成 .git 目录）。</p>
+<p>进入目标目录，右键单击选择Git Bash Here然后就可以输入命令。使用当前目录作为Git仓库，我们只需使它初始化。</p>
+<pre><code class="lang-js">git init
+</code></pre>
+<p>该命令执行完后会在当期目录生成一个 .git 目录。</p>
+<p>使用我们指定目录作为Git仓库。</p>
+<pre><code class="lang-js">git init folderPath
+</code></pre>
+<p>folderPath为目录地址，初始化后，会在 folderPath 目录下会出现一个名为 .git 的目录，所有 Git 需要的数据和资源都存放在这个目录中。</p>
+<p>如果当前目录下有几个文件想要纳入版本控制，需要先用 git add 命令告诉 Git 开始对这些文件进行跟踪，然后使用 git commit命令提交。</p>
+<p><strong>Git提交文件到版本库有两步：</strong></p>
+<ul>
+<li>第一步：使用 git add 把文件添加进去，实际上就是把文件添加到暂存区。</li>
+<li>第二步：使用git commit提交更改，实际上就是把暂存区的所有内容提交到当前分支上。</li>
+</ul>
+<p>下面将详细介绍这两条命令：</p>
+<blockquote>
+<p><strong>git add（添加工作区文件到暂存区）</strong></p>
+</blockquote>
+<p>比如在当前目录下新建README.md文件，然后输入下列命令：</p>
+<pre><code class="lang-js">git add README.md
+</code></pre>
+<p><strong>注：添加当前目录下的所有文件和子目录为：</strong></p>
+<pre><code class="lang-js">git add .
+</code></pre>
+<blockquote>
+<p><strong>git commit（将暂存区内容提交到当前版本库）</strong></p>
+</blockquote>
+<pre><code class="lang-js">$ git commit -m &quot;README.md提交成功&quot;
+</code></pre>
+<p>结果显示：</p>
+<pre><code class="lang-js">[master (root-commit) f174e25] README.md提交成功
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 README.md
+</code></pre>
+<p>当多个文件被修改时使用这个命令提交：</p>
+<pre><code class="lang-js">git commit -a -m &lt;file&gt;;
+</code></pre>
+<p>说明：-a, --all commit all changed files(提交所有被修改的文件)</p>
+<pre><code class="lang-js">$ git commit -a -m .
+[master f155b28] .
+5 files changed, 14 insertions(+), 8 deletions(-)
+</code></pre>
+<blockquote>
+<p><strong>git rm （移除当前版本库文件）</strong></p>
+</blockquote>
+<pre><code class="lang-js">$ git rm README.md
+rm &#39;README.md&#39;
+</code></pre>
+<p>执行完这句会发现README.md文件在工作区消失了，但是这个时候在版本库是否还存在呢？</p>
+<blockquote>
+<p><strong>git status（查看当前仓库状态）</strong></p>
+</blockquote>
+<p>git status 以查看在你上次提交之后是否有修改,可以让我们时刻掌握仓库的状态，此时我们输入git status命令会得到下面的结果：</p>
+<pre><code class="lang-js">$ git status
+On branch master
+Changes to be committed:
+  (use &quot;git reset HEAD &lt;file&gt;...&quot; to unstage)
+
+        deleted:    README.md
+</code></pre>
+<p>此时显示了 README.md 文件被删除但还没有被提交，与 git add 命令一样，git rm 只有经过git commit 命令之后才会真正在版本库被删除。</p>
+<blockquote>
+<p><strong>git diff</strong></p>
+</blockquote>
+<p>执行 git diff 来查看执行 git status 的结果的详细信息。
+git diff 命令显示已写入缓存与已修改但尚未写入缓存的改动的区别。git diff 有两个主要的应用场景。</p>
+<ul>
+<li>尚未缓存的改动：git diff</li>
+<li>查看已缓存的改动： git diff --cached</li>
+<li>查看已缓存的与未缓存的所有改动：git diff HEAD</li>
+<li>显示摘要而非整个 diff：git diff --stat</li>
+</ul>
+<blockquote>
+<p><strong>git clone (克隆其他仓库)</strong></p>
+</blockquote>
+<p>使用 git clone 拷贝一个 Git 仓库到本地，让自己能够查看该项目，或者进行修改。如果你需要与他人合作一个项目，或者想要复制一个项目，看看代码，你就可以克隆那个项目。 执行命令：</p>
+<pre><code class="lang-js">$ git clone [url]
+</code></pre>
+<p>[url] 为你想要复制的项目地址。默认情况下，Git 会按照你提供的 URL 所指示的项目的名称创建你的本地项目目录。 通常就是该 URL 最后一个 / 之后的项目名称。如果你想要一个不一样的名字， 你可以在该命令后加上你想要的名称。</p>
+<h2 id="-">版本管理</h2>
+<p>1.查看远程分支</p>
+<pre><code>git branch -a
+</code></pre><p>2.查看本地分支</p>
+<pre><code>git branch
+</code></pre><p>3.创建分支</p>
+<blockquote>
+<p><strong>git branch <name></strong></p>
+</blockquote>
+<p>4.切换分支到test</p>
+<pre><code>git checkout test
+</code></pre><p>5.删除本地分支</p>
+<pre><code>git branch -d xxxxx
+</code></pre><p>6.快速切换到master分支</p>
+<pre><code>git checkout master
+</code></pre><p>当然上面这条命令是常规的，我们的快速切换回去的命令才是重点，可用它代替上面<code>git checkout &lt;分支名&gt;</code>的命令。</p>
+<p>我们上面讲解了如何把当前工作区文件添加并提交到本地版本仓库，这里并没有讲解如何修改和撤销文件，版本比较之类的命令，因为考虑到作为入门级别教程不要求过于详细，所以更多的git命令会在后面深入探讨。</p>
+<h2 id="-">如何添加远程库？</h2>
+<p>由于网上关于如何新建github仓库或博客的教程很多，我这里暂时不做赘述，直接引用几篇文章，后期如果有空再做补充。</p>
+<ul>
+<li><a href="http://my.oschina.net/wangxnn/blog/499854#OSC_h2_15">使用GitHub Pages搭建博客</a></li>
+<li><a href="http://www.xuanfengge.com/using-ssh-key-link-github-photo-tour.html">使用SSH密钥连接Github</a></li>
+</ul>
+<blockquote>
+<p><strong>git push</strong></p>
+</blockquote>
+<pre><code class="lang-js">$ git remote add origin 仓库地址
+$ git push -u origin master
+</code></pre>
+<p>仓库地址为你在github上面建的仓库的地址。
+<img src="http://i.imgur.com/MB5O4KB.png" alt=""></p>
+<h2 id="-">错误处理</h2>
+<pre><code>error: failed to push some refs
+</code></pre><p>当github上被改变了，有时候会发现直接使用git push -u origin master会出错，这个时候先使用git pull --rebase origin master更新就会解决。</p>
+<pre><code>fatal: Unable to create &#39;E:/coding/pop/.git/index.lock&#39;: File exists.
+</code></pre><p>执行下面的可以解决：</p>
+<pre><code>rm -f ./.git/index.lock
+</code></pre>

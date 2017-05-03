@@ -1,0 +1,217 @@
+[
+	{
+		"pageId":"20170426",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20170426",
+		"title":"cordova研习笔记(一) —— 初试牛刀之cordova.js概要",
+		"from":"原创",
+		"time":"2017-4-26",
+		"keywords":["cordova","hybrid app"],
+		"digest":"来新公司的第一个任务，研究hybrid App中间层实现原理，做中间层插件开发。这个任务挺有意思，也很有挑战性，之前在DCloud虽然做过5+ App开发，但是中间层的东西确实涉及不多。本系列文章属于系列开篇cordova学习笔记，本文主要是从零开始搭建一个cordova工程，并了解cordova开发的基本内容。"
+	},
+	{
+		"pageId":"20170412",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20170412",
+		"title":"node学习之路（二）—— Node.js 连接 MongoDB",
+		"from":"原创",
+		"time":"2017-4-12",
+		"keywords":["node","mongodb"],
+		"digest":"之前对于node的学习，一直只是停留在一种帮前端打辅助的层面，没有深入去研究，是时候需要改变一下了，近来找工作诸多不顺心（找个两情相悦的真不容易啊~），多数对前端有后端语言经验和工作年限有要求，对于我这个应届生真心不是一般的尴尬，所以先继续深入学习一下node咯，本文主要记录一下学习MongoDB数据库相关的内容（属于比较流水账的文章），弥补一下自己的知识空白。这两天收到两个offer心情还是不错的，就是有点难抉择。"
+	},
+	{
+		"pageId":"20170401",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20170401",
+		"title":"Angular系列学习笔记（二）—— 基于gulp构建Angular单页面应用",
+		"from":"原创",
+		"time":"2017-4-1",
+		"keywords":["gulp","angular","angular-ui-router","angular-material"],
+		"digest":"构建打包工具之前一直是使用 webpack（歪脖帕克，毕竟尤大推荐的工具），由于公司这边是使用gulp，为了和公司同步，私下还是要学习学习，毕竟懂点万一需要和老大交流也不至于说有啥问题，这篇文章将会以零基础的角度去写一下基于gulp搭建angular的工程，借这个机会顺便重构一下自己的博客。"
+	},{
+		"pageId":"20170306",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20170306",
+		"title":"Angular系列学习笔记（一）—— 聊聊angular的模块化",
+		"from":"原创",
+		"time":"2017-3-6",
+		"keywords":["angular","vue","模块化","$scope","依赖注入","service"],
+		"digest":"近来换工作了，由于团队技术需要，不得不从vue.js迁移到angular.js，不过这也是一个学习angular的机会，顺便也将这两个框架做一些对比，为了方便其他小伙伴，将学习过程中的内容记录下来。由开始的不太习惯到现在也能够习惯angular的写法，着实在思维上有很大的改变，所以这个系列的文章会记录一下自己的学习过程，本文会由浅及深一步步去解读vue.js和angular.js的区别。由于时间关系，这篇文章断断续续耗时几周，不求什么，只希望在这个过程中将angular相关的一些特性去梳理一下，由于是系列开篇，文章并没有深入探讨源码和原理，后续会写更多个人的思考和探索。"
+	},
+	{
+		"pageId":"20161115",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20161115",
+		"title":"npm 常用命令详解",
+		"from":"转载",
+		"time":"2016-11-15",
+		"keywords":["npm"],
+		"digest":"在查看npm 命令参数的时候搜到白树的这篇文章，觉得很详细，自己后续也可能会继续看，干脆整理一下转载到自己博客，只为了方便学习，如需转载用作商业用途，请联系作者本人。"
+	},
+	{
+		"pageId":"20161012",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20161012",
+		"title":"探秘JavaScript中的六个字符",
+		"from":"译文",
+		"time":"2016-10-12",
+		"keywords":["JavaScript"],
+		"digest":"JavaScript 是一个奇怪而有趣的语言，我们可以写一些疯狂却仍然有效的代码。它试图帮助我们把事情转换到基于我们如何对待他们的特定类型。"
+	},
+	{
+		"pageId":"20160929",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160929",
+		"title":"node学习之路（一）—— 网络请求",
+		"from":"原创",
+		"time":"2016-09-29",
+		"keywords":["JavaScript","nodejs","http","url","Query String","爬虫"],
+		"digest":"一直以来想深入学习一下node，一来是自己目前也没有什么时间去学习服务器端语言，但是有时候又想自己撸一下服务器端，本着爱折腾的精神开始写一写关于node的文章记录学习心得。本系列文章不会过多去讲解node安装、基本API等内容，而是通过一些实例去总结常用用法。本文主要讲解node网络操作的相关内容，node中的网络操作依赖于http模块，http模块提供了两种使用方式：作为服务器端使用，创建一个http服务器，监听http客户端请求并返回响应；作为客户端使用，发起一个http客户端请求，获取服务器端响应。"
+	},
+	{
+		"pageId":"20160817",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160817",
+		"title":"录音文件与Base64编码相互转换的方法",
+		"from":"原创",
+		"time":"2016-08-17",
+		"keywords":["mui","html5+","base64","录音","nativejs"],
+		"digest":"最近有几个朋友一直在问语音文件怎么转base64字符串进行发送上传，base64字符串又如何转成文件，论坛中已经有多篇问题的帖子有介绍，这里只是稍微整理，方便大家可以更加方便的使用。"
+	},
+	{
+		"pageId":"20160816",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160816",
+		"title":"JavaScript进阶学习（三）—— 基于html5 File API文件操作",
+		"from":"原创",
+		"time":"2016-08-16",
+		"keywords":["blob","File","FileReader","DataURI","URL"],
+		"digest":"这段时间一直有朋友在问文件上传下载的事，搜一下论坛发现相关的问题不少，但是不够系统，本着为人民服务的态度本文试着将一些问题整理一下，争取用初学者可以更明确的去处理相关的问题。文件上传是开发中绕不过的一个坎儿，对于很多没有经验的人来说，简直懵逼，目前我所知道的上传方式有下面这几种：传统flash上传、隐藏iframe框上传、表单数据提交、HTML5的新工具——File API。"
+	},
+	{
+		"pageId":"20160805",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160805",
+		"title":"mui组件通用CSS类",
+		"from":"原创",
+		"time":"2016-08-05",
+		"keywords":["mui","css组件"],
+		"digest":"对mui中的组件的通用CSS类做了一下整理，希望给用到mui框架的朋友一些帮助。"
+	},
+	{
+		"pageId":"20160801",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160801",
+		"title":"mui初级入门教程（七）— 基于native.js的文件系统管理功能实现",
+		"from":"原创",
+		"time":"2016-08-01",
+		"keywords":["mui","nativejs","android"],
+		"digest":"这段时间以来一直有人问5+ sdk怎么在原生中集成，每次给了文档和没给没啥大区别，这部分人之所以不能根据文档写出想要的结果，无非有两种情况，一种对于原生完全懵逼，毕竟基于mui做APP毕竟前端还是占多数，而前端中熟悉原生的人毕竟是少数，很多人声称会原生哪里还会用h5，这话只能呵呵？就大趋势而言，应用web化是现在的潮流所向，现在即使有资金和技术实力的大厂也在做混合式开发和H5的APP，不然dcloud官方也不会花大力气在流应用上。近来越来越多的原生开发者朋友和我交流h5，他们很多是被逼着转前端，这些人懂原生，但是不懂h5，所以这些朋友从原生转mui过程中可能还是不能够理解如果用5+ sdk，中间的交互怎么解决，这就是第二种人的困境？"
+	},
+	{
+		"pageId":"20160728",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160728",
+		"title":"HTML5+ APP页面传参详解",
+		"from":"原创",
+		"time":"2016-07-28",
+		"keywords":["mui","html5+","mui.fire","页面传参"],
+		"digest":"页面传参数是一种比较常见的业务需求，在html5+ app中，根据实现原理及适用环境可以分为两大类。"
+	},
+	{
+		"pageId":"20160726",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160726",
+		"title":"mui初级入门教程（六）— 模板页面实现原理及多端适配指南",
+		"from":"原创",
+		"time":"2016-07-26",
+		"keywords":["mui","webview","template","os","多端适配"],
+		"digest":"自从来公司实习，每天都淹没在问题中，一直没有抽出空写写文章，今天轮到我完善文档和总结，就想着抽空把文档中的内容写写，但是文档限于篇幅，而且不能话唠，自然博客是最好的方式去分享。哈哈，废话不多说，将整理的内容贴出来，稍作解释，方便大家查阅。"
+	},
+	{
+		"pageId":"20160703",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160703",
+		"title":"JavaScript进阶学习（二）—— 基于原型链继承的js工具库的实现方法",
+		"from":"原创",
+		"time":"2016-07-03",
+		"keywords":["JavaScript","原型链","jQuery类库"],
+		"digest":"写这篇文章的目的很简单，就是想把之前一些不太清晰的概念梳理一下，网上这类教程很多，但是本文尽可能还原问题本质，注意知识点之间的联系。相信看过我前面的博客的朋友一定知道我写文章的风格了，尽可能详尽，而且不是只是为了解决某一个小问题而写，方便大家知识点更体系，一篇内容其实相当于一章节的内容，容量有点大，我也不是一天完成的，一般是一周时间左右，所以大家阅读的话可能也需要一些时间才能有所收获。作为进阶教程，本文将简要讲述JavaScript面向对象编程的内容，但是不会介绍什么是接口，什么是对象，什么是对象属性，什么是对象方法，但是相信你看完了后自然理所当然的理解了这些基本概念。"
+	},
+	{
+		"pageId":"20160626",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160626",
+		"title":"JavaScript进阶学习（一）—— 基于正则表达式的简单js模板引擎实现",
+		"from":"原创",
+		"time":"2016-06-26",
+		"keywords":["JavaScript","正则表达式","js模板引擎"],
+		"digest":"这年头MVC、MVVM框架泛滥，很多时候我们只是用了这些框架，有时候想深入去了解这些框架背后的原理实现时，阅读源码时发现无从下手，js基本功简直渣渣，所以想利用业余时间还是要补补基础。以前看JavaScript的一些书籍时总是把正则表达式这一章跳过了，遇到一些需要写正则的时候然后都是各种copy，js要进阶感觉还是要系统学习一下正则，虽然看起来像乱码一样的匹配规则，但是如果熟练使用会很有用，那么今天就先从正则开始吧！和大部分书籍一样，本文前篇也会是讲解基础，本文的很多内容都是摘自网络进行整理，有些内容需要各位自己进行实践验证。"
+	},
+	{
+		"pageId":"20160615",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160615",
+		"title":"mui初级入门教程（五）— 聊聊即时通讯（IM），基于环信 web im SDK",
+		"from":"原创",
+		"time":"2016-06-15",
+		"keywords":["mui","html5+","环信 web im","页面传值","缓存"],
+		"digest":"感觉自从qq、微信这种APP用多了，现在都没啥人发短信了，现在什么APP都想加入IM的功能，曾经有段时间在折腾自己撸一个聊天的东西，也尝试过很多平台，今天这里给大家介绍一下从零开始自己做一个聊天的app功能。因为之前帮朋友做过一个基于环信的聊天功能，这里就以环信的平台为例举个例子说明。这篇文章注意想讲解一下集成这种第三方的一般实现方法，不会一下子就把所有的功能都集成，因为之前做环信主要是在微信上用，所以用的是环信的Web IM，遇到了蛮多坑，这次打算用dcloud这边的mui重新集成，所以在没有完全做完之前，所以也不知道有些坑具体能够在有限的时间内解决，本文仅供参考，欢迎大家去实践检验。在写这篇文章之前先贴一个Dcloud论坛中的资源帖，【即时通信、im问题汇总】http://ask.dcloud.net.cn/article/649"
+	},
+	{
+		"pageId":"20160605",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160605",
+		"title":"mui初级入门教程（四）—  再谈webview，从小白变“大神”！",
+		"from":"原创",
+		"time":"2016-06-05",
+		"keywords":["mui","html5+","webview"],
+		"digest":"写这篇文章之前先吐吐槽，因为是学生，不想用父母辛辛苦苦挣的钱买什么苹果手机，因为确实贵，本人至今用的还是去年买的魅蓝note 1（虽然已经很久了，但是没办法啊，舍不得花钱换。），前段时间项目钱收到了本来想换手机的，但是想了想还是先省一省，过几个月开始实习了再看吧！（哈哈，如果有哪位土豪看到这里愿意给我赞助一个二手苹果手机那也是极其感动的，可以作为技术顾问作为报答。）"
+	},
+	{
+		"pageId":"20160529",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160529",
+		"title":"mui初级入门教程（三）— html5+ XMLHttpRequest与mui ajax用法详解",
+		"from":"原创",
+		"time":"2016-05-29",
+		"keywords":["mui","html5+","XMLHttpRequest","ajax","懒加载"],
+		"digest":"这是这个系列的的第三篇文章，前面的文章在多个地方（本人`github`博客、`dcloud ask`社区、`segmentfault`）发出来了，很多朋友收藏点赞，只是没有多少人反映内容的深浅，也没有人提出意见，所以实话说不知道符不符合大家胃口，不过我写博客一向以详细为标准，尽可能照顾到各种人群，特别是入门级的同学，力求还原我学习这个东西的一个思路和过程，在文章中也分享一些不错的干货，最近在折腾博客，用`webpack`和`vue-cli`打包了一下，目前还有些问题有待解决，自己尝试写一个markdown编辑器因为bug过多的问题，然后开始使用马克飞象写博客，毕竟生成的界面美观多了，这样可以方便大家阅读吧。废话不多说，开始我们今天的内容，今天主要是学习一下`html5+`的`XMLHttpRequest`以及`mui`的基本用法。"
+	},
+	{
+		"pageId":"20160519",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160519",
+		"title":"mui初级入门教程（二）— html5+ webview 实现底部栏切换用法详解",
+		"from":"原创",
+		"time":"2016-05-19",
+		"keywords":["mui","html5+","webview"],
+		"digest":"本系列文章我们将利用mui基于网易云音乐API实现一个音乐播放器APP，同时基于环形或者融云实现聊天功能。作为本系列文章的第一篇，本文会详细讲解html5+中管理应用窗口界面的Webview模块的用法，因为是初级教程篇不过多讲解原理部分，初级用户只需要知道基本用法就可以，并使用mui.js中的组件进行页面效果展示。"
+	},
+	{
+		"pageId":"20160515",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160515",
+		"title":"mui初级入门教程（一）— 菜鸟入手mui的学习路线",
+		"from":"原创",
+		"time":"2016-05-15",
+		"keywords":["mui","html5+"],
+		"digest":"相信很多朋友初次接触到dcloud这边的产品，一般都是hbuilder和mui，所以很多朋友对于dcloud这边的产品链的认识也是各不相同。我相信对于很多新手来说，初次使用dcloud这边的产品的第一感觉一定是觉得这个东西很好却无从下手，然后被一些新的概念转得云里雾里，然后就开始吐槽官方文档，其实真的是文档不好吗？"
+	},
+	{
+		"pageId":"20160422",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160422",
+		"title":"webpack入门详解",
+		"from":"原创",
+		"time":"2016-04-22",
+		"keywords":["webpack"],
+		"digest":"上一篇文章里面讲到前端模块化的基本概念，同时用webpack进行打包演示了一个基础的hello world实例，webpack的内容肯定不止那么多，在这篇文章里面我会详细介绍webpack的使用细节。同时，会结合vue.js完成一个更加实用的例子。如果你还没有看上一篇内容，建议你先阅读相关的内容，再看本篇文章效果会更好。"
+	},
+	{
+		"pageId":"20160415",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160415",
+		"title":"浅析前端模块化",
+		"from":"原创",
+		"time":"2016-04-15",
+		"keywords":["前端模块化","webpack"],
+		"digest":"近来学习了git，github，确实体验了一下开发效率这个问题，比如几条常用命令就可以把代码下载上传到github上，可以很快的去测试一下效果。去年就听说过前端模块化这个概念，但是一直没有深入去了解，所以准备继续学习一下相关的技术。虽然现在前端各种口水战，说什么前端目前浮躁，其实个人觉得不然，是因为人容易站在自己的立场去看问题，不管什么框架终究要适用于业务需求需要，各自有自己的适用环境，无从说哪种更好，自己觉得合适就好。"
+	},
+	{
+		"pageId":"20160401",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160401",
+		"title":"走近github王国，git入门教程",
+		"from":"原创",
+		"time":"2016-04-01",
+		"keywords":["git","github"],
+		"digest":"一个稳定简单，空间大，关注度高的博客分享平台是提高博客浏览量的必要条件，当然内容充实才是关键，废话不多说，今天我们就来搞定git和github，相信程序猿们都懂。"
+	},
+	{
+		"pageId":"20160328",
+		"pageUrl":"http://zhaomenghuan.leanapp.cn/blog/20160328",
+		"title":"基于JavaScript的桌面应用入门",
+		"from":"原创",
+		"time":"2016-03-28",
+		"keywords":["electron", "markdown", "Vue.js"],
+		"digest":"为了让自己的博客体验更好，也方便自己平时发布，打算从零开始打造一个总结的博客文章发布平台。当然在这个过程中肯定会用到一些很优秀的第三方插件，这样一方面可以减少自己的工作量，一方面可以学习一下其他优秀的工具。"
+	}
+]

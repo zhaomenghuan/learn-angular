@@ -1,0 +1,590 @@
+<h1 id="mui-html5-webview-">mui初级入门教程（二）— html5+ webview 底部栏用法详解</h1>
+<blockquote>
+<ul>
+<li><strong>文章来源：小青年原创</strong></li>
+<li><strong>发布时间：2016-05-19</strong></li>
+<li><strong>关键词：mui,html5+,webview</strong></li>
+<li><strong>转载需标注本文原始地址: <a href="http://zhaomenghuan.github.io/#!/blog/20160519">http://zhaomenghuan.github.io/#!/blog/20160519</a></strong></li>
+</ul>
+</blockquote>
+<h2 id="-">写在前面</h2>
+<p>本系列文章我们将利用mui基于网易云音乐API实现一个音乐播放器APP，同时基于环形或者融云实现聊天功能。作为本系列文章的第一篇，本文会详细讲解html5+中管理应用窗口界面的Webview模块的用法，因为是初级教程篇不过多讲解原理部分，初级用户只需要知道基本用法就可以，并使用mui.js中的组件进行页面效果展示。</p>
+<h2 id="webview-">webview基本知识</h2>
+<blockquote>
+<p>Webview模块管理应用窗口界面，实现多窗口的逻辑控制管理操作。通过plus.webview可获取应用界面管理对象。</p>
+</blockquote>
+<h3 id="-webview-">什么是窗口？什么是webview?</h3>
+<p>这里我们首先来举个例子，大家都用过浏览器，常用的浏览器可以打开多个网页。电脑屏幕就是一个窗口，不同的页面我们可以什么是不同的webview，我们可以通过控制webview的切换从而控制浏览不同的页面。</p>
+<p>对于我们这里就是一个html页面就是一个窗口，一个html页面可以创建多个webview。这个webview是原生APP中浏览网页的组件，android和iOS都有，html5plus中的webview是对原生webview的封装，可以用js进行调用，所以它的运行环境是APP环境，普通浏览器不支持。</p>
+<p>首先我们现在html5plus官网看一下<strong><a href="http://www.html5plus.org/doc/zh_cn/webview.html">webview API文档</a></strong>,这里我们重点看一下下面几个方法:</p>
+<h3 id="-webview-">创建新的Webview窗口</h3>
+<pre><code class="lang-js">WebviewObject plus.webview.create( url, id, styles, extras );
+</code></pre>
+<p><strong>说明:</strong>
+创建Webview窗口，用于加载新的HTML页面，可通过styles设置Webview窗口的样式，创建完成后需要调用show方法才能将Webview窗口显示出来。</p>
+<h3 id="-webview-">显示Webview窗口</h3>
+<pre><code class="lang-js">void plus.webview.show( id_wvobj, aniShow, duration, showedCB, extras );
+</code></pre>
+<p><strong>说明：</strong>
+显示已创建或隐藏的Webview窗口，需先获取窗口对象或窗口id，并可指定显示窗口的动画及动画持续时间。</p>
+<h3 id="-webview-">隐藏Webview窗口</h3>
+<pre><code class="lang-js">void plus.webview.hide( id_wvobj, aniHide, duration, extras );
+</code></pre>
+<p><strong>说明：</strong>
+根据指定的WebviewObject对象或id隐藏Webview窗口，使得窗口不可见。</p>
+<h3 id="-webviewobject-">获取当前窗口的WebviewObject对象</h3>
+<pre><code class="lang-js">WebviewObject plus.webview.currentWebview();
+</code></pre>
+<p><strong>说明：</strong>
+获取当前页面所属的Webview窗口对象。</p>
+<h3 id="-webviewobject-">查找指定标识的WebviewObject窗口</h3>
+<pre><code class="lang-js">WebviewObject plus.webview.getWebviewById( id );
+</code></pre>
+<p><strong>说明：</strong>
+在已创建的窗口列表中查找指定标识的Webview窗口并返回。 若没有查找到指定标识的窗口则返回null，若存在多个相同标识的Webview窗口，则返回第一个创建的Webview窗口。 如果要获取应用入口页面所属的Webview窗口，其标识为应用的%APPID%，可通过plus.runtime.appid获取。</p>
+<h3 id="-webview-">创建并打开Webview窗口</h3>
+<pre><code class="lang-js">WebviewObject plus.webview.open( url, id, styles, aniShow, duration, showedCB );
+</code></pre>
+<p><strong>说明：</strong>
+创建并显示Webview窗口，用于加载新的HTML页面，可通过styles设置Webview窗口的样式，创建完成后自动将Webview窗口显示出来。</p>
+<blockquote>
+<p>以上来源于html5plus文档，只列举了部分最常用的方法，旨在为后文做铺垫，由于不是文档，所以也得也不清楚，如果想详细了解请看这里<a href="http://www.html5plus.org/doc/zh_cn/webview.html">html5plus webview API</a>。</p>
+</blockquote>
+<h2 id="mui-webview-">mui双webview模式</h2>
+<p>首先我们要了解mui为了解决窗体切换白屏和区域滚动提出的双webview模式。</p>
+<h3 id="-">页面初始化</h3>
+<blockquote>
+<p>mui框架将很多功能配置都集中在<code>mui.init</code>方法中，要使用某项功能，只需要在<code>mui.init</code>方法中完成对应参数配置即可，目前支持在<code>mui.init</code>方法中配置的功能包括：创建子页面、关闭页面、手势事件配置、预加载、下拉刷新、上拉加载、设置系统状态栏背景颜色。mui需要在页面加载时初始化很多基础控件,如监听返回键,因此务必在每个页面中调用.</p>
+</blockquote>
+<p><strong>以下是可以配置的参数：</strong></p>
+<pre><code class="lang-js">mui.init({
+    //子页面
+    subpages: [{
+        //...
+    }],
+    //预加载
+    preloadPages:[
+        //...
+     ],
+    //下拉刷新、上拉加载
+     pullRefresh : {
+       //...
+    },
+    //手势配置
+      gestureConfig:{
+       //...
+    },
+    //侧滑关闭
+    swipeBack:true, //Boolean(默认false)启用右滑关闭功能
+
+    //监听Android手机的back、menu按键
+    keyEventBind: {
+        backbutton: false,  //Boolean(默认truee)关闭back按键监听
+        menubutton: false   //Boolean(默认true)关闭menu按键监听
+    },
+    //处理窗口关闭前的业务
+    beforeback: function() {
+        //... //窗口关闭前处理其他业务详情点击 ↑ &quot;关闭页面&quot;链接查看
+    },
+    //设置状态栏颜色
+    statusBarBackground: &#39;#9defbcg&#39;, //设置状态栏颜色,仅iOS可用
+    preloadLimit:5//预加载窗口数量限制(一旦超出,先进先出)默认不限制
+})
+</code></pre>
+<p>在<code>app</code>开发中，若要使用<code>HTML5+</code>扩展<code>api</code>，必须等<code>plusready</code>事件发生后才能正常使用，mui将该事件封装成了<code>mui.plusReady()</code>方法，涉及到<code>HTML5+</code>的<code>api</code>，建议都写在<code>mui.plusReady</code>方法中。</p>
+<p>如下为打印当前页面URL的示例：</p>
+<pre><code class="lang-js">mui.plusReady(function(){
+     console.log(&quot;当前页面URL：&quot;+plus.webview.currentWebview().getURL());
+});
+</code></pre>
+<h3 id="-">创建子页面</h3>
+<p>在mobile app开发过程中，经常遇到卡头卡尾的页面，此时若使用局部滚动，在android手机上会出现滚动不流畅的问题； mui的解决思路是：将需要滚动的区域通过单独的webview实现，完全使用原生滚动。具体做法则是：将目标页面分解为主页面和内容页面，主页面显示卡头卡尾区域，比如顶部导航、底部选项卡等；内容页面显示具体需要滚动的内容，然后在主页面中调用mui.init方法初始化内容页面。</p>
+<pre><code class="lang-js">mui.init({
+    subpages:[{
+      url:your-subpage-url,//子页面HTML地址，支持本地地址和网络地址
+      id:your-subpage-id,//子页面标志
+      styles:{
+        top:subpage-top-position,//子页面顶部位置
+        bottom:subpage-bottom-position,//子页面底部位置
+        width:subpage-width,//子页面宽度，默认为100%
+        height:subpage-height,//子页面高度，默认为100%
+        ......
+      },
+      extras:{}//额外扩展参数
+    }]
+});
+</code></pre>
+<p><strong>参数说明：</strong>
+<strong>styles:</strong>表示窗口属性，参考5+规范中的WebviewStyle；特别注意，height和width两个属性,即使不设置，也默认按100%计算；因此若设置了top值为非&quot;0px&quot;的情况，建议同时设置bottom值，否则5+ runtime根据高度100%计算，可能会造成页面真实底部位置超出屏幕范围的情况；left、right同理。</p>
+<p><strong>示例：Hello mui的首页其实就是index.html加list.html合并而成的，如下：</strong></p>
+<p><img src="https://segmentfault.com/img/remote/1460000005340870" alt=""></p>
+<p>index.html的作用就是显示固定导航，list.html显示具体列表内容，列表项的滚动是在list.html所在webview中使用原生滚动，既保证了滚动条不会穿透顶部导航，符合app的体验，也保证了列表流畅滚动，解决了区域滚动卡顿的问题。 list.html就是index.html的子页面，创建代码比较简单，如下：</p>
+<pre><code class="lang-js">mui.init({
+    subpages:[{
+      url:&#39;list.html&#39;,
+      id:&#39;list.html&#39;,
+      styles:{
+        top:&#39;45px&#39;,//mui标题栏默认高度为45px；
+        bottom:&#39;0px&#39;//默认为0px，可不定义；
+      }
+    }]
+});
+</code></pre>
+<h3 id="-">打开新页面</h3>
+<p>做<code>web app</code>，一个无法避开的问题就是转场动画；<code>web</code>是基于链接构建的，从一个页面点击链接跳转到另一个页面，如果通过有刷新的打开方式，用户要面对一个空白的页面等待；如果通过无刷新的方式，用<code>Javascript</code>移入DOM节点（常见的<code>SPA</code>解决方案），会碰到很高的性能挑战：DOM节点繁多，页面太大，转场动画不流畅甚至导致浏览器崩溃； mui的解决思路是：单<code>webview</code>只承载单个页面的dom，减少dom层级及页面大小；页面切换使用原生动画，将最耗性能的部分交给原生实现。</p>
+<pre><code class="lang-js">mui.openWindow({
+    url:new-page-url,
+    id:new-page-id,
+    styles:{
+      top:newpage-top-position,//新页面顶部位置
+      bottom:newage-bottom-position,//新页面底部位置
+      width:newpage-width,//新页面宽度，默认为100%
+      height:newpage-height,//新页面高度，默认为100%
+      ......
+    },
+    extras:{
+      .....//自定义扩展参数，可以用来处理页面间传值
+    },
+    createNew:false,//是否重复创建同样id的webview，默认为false:不重复创建，直接显示
+    show:{
+      autoShow:true,//页面loaded事件发生后自动显示，默认为true
+      aniShow:animationType,//页面显示动画，默认为”slide-in-right“；
+      duration:animationTime//页面动画持续时间，Android平台默认100毫秒，iOS平台默认200毫秒；
+    },
+    waiting:{
+      autoShow:true,//自动显示等待框，默认为true
+      title:&#39;正在加载...&#39;,//等待对话框上显示的提示内容
+      options:{
+        width:waiting-dialog-widht,//等待框背景区域宽度，默认根据内容自动计算合适宽度
+        height:waiting-dialog-height,//等待框背景区域高度，默认根据内容自动计算合适高度
+        ......
+      }
+    }
+})
+</code></pre>
+<p><strong>参数说明：</strong></p>
+<ul>
+<li><strong>styles:</strong>表示窗口参数，<a href="http://www.html5plus.org/doc/zh_cn/webview.html#plus.webview.WebviewStyles">参考5+规范中的WebviewStyle</a>；特别注意，<code>height</code>和<code>width</code>两个属性,即使不设置，也默认按<code>100%</code>计算；因此若设置了<code>top</code>值为非<code>&quot;0px&quot;</code>的情况，建议同时设置<code>bottom</code>值，否则<code>5+ runtime</code>根据高度<code>100%</code>计算，可能会造成页面真实底部位置超出屏幕范围的情况,<code>left</code>、<code>right</code>同理。</li>
+<li><strong>extras:</strong>新窗口的额外扩展参数，可用来处理页面间传值；例如：</li>
+</ul>
+<pre><code class="lang-js">var webview = mui.openWindow({
+    url:&#39;info.html&#39;,
+    extras:{
+        name:&#39;mui&#39;
+    }
+});
+console.log(webview.name);
+</code></pre>
+<p>控制台会输出&quot;mui&quot;字符串；
+注意：扩展参数仅在打开新窗口时有效，若目标窗口为预加载页面，则通过mui.openWindow方法打开时传递的extras参数无效。</p>
+<ul>
+<li><strong>createNew:</strong>是否重复创建相同id的<code>webview</code>；为优化性能、避免app中重复创建webview，mui v1.7.0开始增加<code>createNew</code>参数，默认为false；判断逻辑如下：若createNew为true，则不判断重复，每次都新建<code>webview</code>；若为fasle，则先计算当前App中是否已存在同样id的webview，若存在则直接显示；否则新创建并根据show参数执行显示逻辑；该参数可能导致的影响：若业务写在<code>plusReady</code>事件中，而<code>plusReady</code>事件仅首次创建时会触发，则下次再次通过<code>mui.openWindow</code>方法打开同样webview时，是不会再次触发<code>plusReady</code>事件的，此时可通过自定义事件触发；案例参考：<code>http://ask.dcloud.net.cn/question/6514</code>;</li>
+<li><strong>show:</strong>表示窗口显示控制。autoShow：目标窗口loaded事件发生后，是否自动显示；若目标页面为预加载页面，则该参数无效；aniShow表示页面显示动画，比如从右侧划入、从下侧划入等，具体可参考<a href="http://www.html5plus.org/doc/zh_cn/webview.html#plus.webview.AnimationTypeShow">5+规范中的AnimationTypeShow</a>。</li>
+<li><strong>waiting:</strong>表示系统等待框；mui框架在打开新页面时等待框的处理逻辑为：显示等待框--&gt;创建目标页面webview--&gt;目标页面loaded事件发生--&gt;关闭等待框；因此，只有当新页面为新创建页面（webview）时，会显示等待框，否则若为预加载好的页面，则直接显示目标页面，不会显示等待框。waiting中的参数：autoShow表示自动显示等待框，默认为true，若为false，则不显示等待框；注意：若显示了等待框，但目标页面不自动显示，则需在目标页面中通过如下代码关闭等待框<code>plus.nativeUI.closeWaiting()</code>;。title表示等待框上的提示文字，options表示等待框显示参数，比如宽高、背景色、提示文字颜色等，具体可参考<a href="http://www.html5plus.org/doc/zh_cn/nativeui.html#plus.nativeUI.WaitingOptions">5+规范中的WaitingOption</a>。</li>
+</ul>
+<p><strong>示例1：Hello mui中，点击首页右上角的图标，会打开关于页面，实现代码如下：</strong></p>
+<pre><code class="lang-js">//tap为mui封装的单击事件，可参考手势事件章节
+document.getElementById(&#39;info&#39;).addEventListener(&#39;tap&#39;, function() {
+  //打开关于页面
+  mui.openWindow({
+    url: &#39;examples/info.html&#39;,
+    id:&#39;info&#39;
+  });
+});
+</code></pre>
+<p>因没有传入styles参数，故默认全屏显示；也没有传入show参数，故使用<code>slide-in-right</code>动画，新页面从右侧滑入。</p>
+<p><strong>示例2：从A页面打开B页面，B页面为一个需要从服务端加载的列表页面，若在B页面loaded事件发生时就将其显示出来，因服务器数据尚未加载完毕，列表页面为空，用户体验不好；可通过如下方式改善用户体验（最好的用户体验应该是通过预加载的方式）</strong></p>
+<p>第一步，B页面loaded事件发生后，不自动显示</p>
+<pre><code class="lang-js">//A页面中打开B页面，设置show的autoShow为false，则B页面在其loaded事件发生后，不会自动显示；
+mui.openWindow({
+    url: &#39;B.html&#39;,
+    show:{
+      autoShow:false
+    }
+});
+</code></pre>
+<p>第二步，在B页面获取列表数据后，再关闭等待框、显示B页面</p>
+<pre><code class="lang-js">//B页面onload从服务器获取列表数据；
+window.onload = function(){
+  //从服务器获取数据
+  ....
+  //业务数据获取完毕，并已插入当前页面DOM；
+  //注意：若为ajax请求，则需将如下代码放在处理完ajax响应数据之后；
+  mui.plusReady(function(){
+    //关闭等待框
+    plus.nativeUI.closeWaiting();
+    //显示当前页面
+    mui.currentWebview.show();
+  });
+}
+</code></pre>
+<h3 id="-">关闭页面</h3>
+<p>mui框架将窗口关闭功能封装在mui.back方法中，具体执行逻辑是：
+若当前webview为预加载页面，则hide当前webview；否则，close当前webview。</p>
+<p>在mui框架中，有三种操作会触发页面关闭（执行mui.back方法）。</p>
+<ul>
+<li>点击包含.mui-action-back类的控件</li>
+<li>在页面上，向右快速滑动</li>
+<li>Android手机按下back按键</li>
+</ul>
+<p>hbuilder中敲mheader生成的代码块，会自动生成带有返回导航箭头的标题栏，点击返回箭头可关闭当前页面，原因就是因为该返回箭头包含.mui-action-back类，代码如下：</p>
+<pre><code class="lang-html">&lt;header class=&quot;mui-bar mui-bar-nav&quot;&gt;
+    &lt;a class=&quot;mui-action-back mui-icon mui-icon-left-nav mui-pull-left&quot;&gt;&lt;/a&gt;
+    &lt;h1 class=&quot;mui-title&quot;&gt;标题&lt;/h1&gt;
+&lt;/header&gt;
+</code></pre>
+<p>若希望在顶部导航栏之外的其它区域添加关闭页面的控件，只需要在对应控件上添加.mui-action-back类即可，如下为一个关闭按钮示例：</p>
+<pre><code class="lang-html">&lt;button type=&quot;button&quot; class=&#39;mui-btn mui-btn-danger mui-action-back&#39;&gt;关闭&lt;/button&gt;
+</code></pre>
+<p>mui框架封装的页面右滑关闭功能，默认未启用，若要使用右滑关闭功能，需要在<code>mui.init()</code>;方法中设置<code>swipeBack</code>参数，如下：</p>
+<pre><code class="lang-js">mui.init({
+    swipeBack:true //启用右滑关闭功能
+});
+</code></pre>
+<p>mui框架默认会监听Android手机的back按键，然后执行页面关闭逻辑； 若不希望mui自动处理back按键，可通过如下方式关闭mui的back按键监听；</p>
+<pre><code class="lang-js">mui.init({
+    keyEventBind: {
+        backbutton: false  //关闭back按键监听
+    }
+});
+</code></pre>
+<p>除了如上三种操作外，也可以直接调用<code>mui.back()</code>方法，执行窗口关闭逻辑；<code>mui.back()</code>仅处理窗口逻辑，若希望在窗口关闭之前再处理一些其它业务逻辑，则可将业务逻辑抽象成一个具体函数，然后注册为<code>mui.init</code>方法的<code>beforeback</code>参数;<code>beforeback</code>的执行逻辑为：</p>
+<p>执行<code>beforeback</code>参数对应的函数若返回false，则不再执行mui.back()方法；否则（返回true或无返回值），继续执行mui.back()方法；</p>
+<p>示例：从列表打开详情页面，从详情页面再返回后希望刷新列表界面，此时可注册beforeback参数，然后通过自定义事件通知列表页面刷新数据，示例代码如下：</p>
+<pre><code class="lang-js">mui.init({
+    beforeback: function(){
+        //获得列表界面的webview
+        var list = plus.webview.getWebviewById(&#39;list&#39;);
+        //触发列表界面的自定义事件（refresh）,从而进行数据刷新
+        mui.fire(list,&#39;refresh&#39;);
+        //返回true，继续页面关闭逻辑
+        return true;
+    }
+});
+</code></pre>
+<p>注意：<code>beforeback</code>的执行返回必须是同步的（阻塞模式），若使用<code>nativeUI</code>这种异步js（非阻塞模式），则可能会出现意想不到的结果；比如：通过<code>plus.nativeUI.confirm()</code>弹出确认框，可能用户尚未选择，页面已经返回了（<code>beforeback</code>同步执行完毕，无返回值，继续执行<code>mui.back()</code>方法，<code>nativeUI</code>不会阻塞js进程）：在这种情况下，若要自定义业务逻辑，就需要复写<code>mui.back</code>方法了；如下为一个自定义示例，每次都需要用户确认后，才会关闭当前页面。</p>
+<pre><code class="lang-js">//备份mui.back，mui.back已将窗口关闭逻辑封装的比较完善（预加载及父子窗口），因此最好复用mui.back
+var old_back = mui.back;
+mui.back = function(){
+  var btn = [&quot;确定&quot;,&quot;取消&quot;];
+  mui.confirm(&#39;确认关闭当前窗口？&#39;,&#39;Hello MUI&#39;,btn,function(e){
+    if(e.index==0){
+        //执行mui封装好的窗口关闭逻辑；
+        old_back();
+    }
+  });
+}
+</code></pre>
+<p>注意：自定义关闭逻辑时，一定要重写<code>mui.back</code>，不能简单通过<code>addEventListener</code>增加back按键监听， 因为<code>addEventListener</code>只会增加新的执行逻辑，老的监听逻辑依然会执行；</p>
+<h2 id="-">项目实战</h2>
+<p>这个系列的教程我准备带大家一起实现音乐播放器和即时通讯的功能,先上图不多说：
+<img src="http://i.imgur.com/ZUU01cb.jpg" alt=""></p>
+<p>开始的页面效果很简单，就是一个tab bar页面切换组件，我们重点讲解实现方法，至于美化是后面的事。在开始项目之前我先抄了文档的内容，不是为了凑内容，只是想让新手在开始项目之前还是多看看基本概念，俗话说磨刀不误砍柴工，我们对mui的设计思路有一定了解之后写起来才能得心应手。</p>
+<p>相信大家对于<code>mui</code>的双<code>webview</code>模式有初步认识，我们可以分析一下我们接下来要做的这个的实际例子，首先我们的入口文件<code>index.html</code>是一个包括头部和底部的导航栏的<code>webview</code>,中间是一个动态的<code>webview</code>，我们通过点击底部导航栏进行页面切换，并且动态的改变顶部导航栏的内容。</p>
+<p>下面我们新建一个mui项目，这里我命名为M-BOX：</p>
+<ul>
+<li>点击【文件】=》【新建】=》【移动APP】</li>
+<li>设置应用名称、文件存储路径、选择模板
+<img src="http://i.imgur.com/1YeZtIP.png" alt=""></li>
+<li>js,css,fonts文件的详细介绍请戳这里<a href="https://zhaomenghuan.gitbooks.io/mui/content/1-1.html">手把手教你开发HelloWord</a></li>
+<li><strong><a href="http://ask.dcloud.net.cn/docs/#http://ask.dcloud.net.cn/article/483">HBuilder对前端代码的调试方式</a></strong>这个是很重要的一个部分，限于篇幅，这里不能讲解，请自己看教程。</li>
+</ul>
+<h3 id="-">开始写布局文件</h3>
+<p>相信很多人看了前面那么多文档介绍内心肯定是崩溃的，其实我也是，毕竟写了那么多还没有开始写代码我也是拒绝的，只是考虑到很多新手对于找文档这事不一定有经验，那还是先贴一下，大不了回过头再去看咯。
+<img src="http://i.imgur.com/RbeJl2R.gif" alt=""></p>
+<p>好，那我们开始写布局文件：</p>
+<p>在<a href="http://ask.dcloud.net.cn/article/122">MUI开发注意事项</a>这篇文章中提到了几个重要的注意事项，我们在一个就注意一下会比较好，这里不再一一详细列举了，读者自己去看。</p>
+<p>文章中DOM结构提到：</p>
+<ul>
+<li>固定栏靠前</li>
+</ul>
+<p>所谓的固定栏，也就是带有.mui-bar属性的节点，都是基于fixed定位的元素；常见组件包括：顶部导航栏（.mui-bar-nav）、底部工具条(.mui-bar-footer)、底部选项卡（.mui-bar-tab）;这些元素使用时需遵循一个规则：放在.mui-content元素之前，即使是底部工具条和底部选项卡，也要放在.mui-content之前，否则固定栏会遮住部分主内容；</p>
+<ul>
+<li>一切内容都要包裹在mui-content中</li>
+</ul>
+<p>除了固定栏之外，其它内容都要包裹在.mui-content中，否则就有可能被固定栏遮罩，原因：固定栏基于Fixed定位，不受流式布局限制，普通内容依然会从top:0的位置开始布局，这样就会被固定栏遮罩，mui为了解决这个问题，定义了如下css代码：</p>
+<pre><code class="lang-css">.mui-bar-nav ~ .mui-content {
+    padding-top: 44px;
+}
+.mui-bar-footer ~ .mui-content {
+    padding-bottom: 44px;
+}
+.mui-bar-tab ~ .mui-content {
+    padding-bottom: 50px;
+}
+</code></pre>
+<p>我们这里重点看这两条规则，因为这个对于我们正确布局是至关重要的。</p>
+<p>下面我们体验一下<code>hbuilder</code>的代码块功能，在<code>index.html</code>文件的<code>body</code>之间输入<code>mheader</code>，回车试试。</p>
+<p>哈哈，页面头部出来了，不错，这里我们然后删除下面的：</p>
+<pre><code class="lang-html">&lt;a class=&quot;mui-action-back mui-icon mui-icon-left-nav mui-pull-left&quot;&gt;&lt;/a&gt;
+</code></pre>
+<p>先去掉返回箭头。</p>
+<p>然后继续输入<code>mtab</code>,回车，底部导航栏也出来了，我们修改一下导航栏的内容,把代码稍微调整一下。
+整体代码如下：</p>
+<pre><code class="lang-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+        &lt;meta charset=&quot;utf-8&quot;&gt;
+        &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no&quot; /&gt;
+        &lt;title&gt;M-BOX&lt;/title&gt;
+        &lt;link href=&quot;css/mui.min.css&quot; rel=&quot;stylesheet&quot;/&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;header class=&quot;mui-bar mui-bar-nav&quot;&gt;
+            &lt;h1 class=&quot;mui-title&quot;&gt;标题&lt;/h1&gt;
+    &lt;/header&gt;
+    &lt;nav class=&quot;mui-bar mui-bar-tab&quot;&gt;
+            &lt;a class=&quot;mui-tab-item mui-active&quot; href=&quot;html/home.html&quot;&gt;
+                    &lt;span class=&quot;mui-icon mui-icon-home&quot;&gt;&lt;/span&gt;
+                    &lt;span class=&quot;mui-tab-label&quot;&gt;首页&lt;/span&gt;
+            &lt;/a&gt;
+            &lt;a class=&quot;mui-tab-item&quot; href=&quot;html/message.html&quot;&gt;
+                    &lt;span class=&quot;mui-icon mui-icon-chatboxes&quot;&gt;&lt;/span&gt;
+                    &lt;span class=&quot;mui-tab-label&quot;&gt;消息&lt;/span&gt;
+            &lt;/a&gt;
+            &lt;a class=&quot;mui-tab-item&quot; href=&quot;html/setting.html&quot;&gt;
+                    &lt;span class=&quot;mui-icon mui-icon-gear&quot;&gt;&lt;/span&gt;
+                    &lt;span class=&quot;mui-tab-label&quot;&gt;设置&lt;/span&gt;
+            &lt;/a&gt;
+    &lt;/nav&gt;
+    &lt;script src=&quot;js/mui.min.js&quot;&gt;&lt;/script&gt;;
+    &lt;script type=&quot;text/javascript&quot; charset=&quot;utf-8&quot;&gt;
+     // 初始化mui.init()写在这里
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>首页的静态布局我们写完了，我们接下来新建三个含mui的html文件：</p>
+<ul>
+<li>选择工程名，邮件就可以看到【新建】，然后就是选择【目录】新建文件夹和【html文件】新建含mui的html文件。我们新建一个文件夹<code>html</code>，并且在html文件夹下新建，<code>home.html</code>，<code>message.html</code>,<code>setting.html</code>。</li>
+<li>在三个页面<code>body</code>之间分别输入<code>mbody</code>,就可以开始分别写页面了，比如可以先在页面上写上文件名，我们先来完善首页的子页切换逻辑。</li>
+</ul>
+<h3 id="-">动态页面切换</h3>
+<h4 id="1-">1.创建子页面，首个选项卡页面显示，其它均隐藏</h4>
+<p>主要方法就是用<code>plus.webview.create</code>和<code>plus.webview.hide();</code></p>
+<pre><code class="lang-js">//设置默认打开首页显示的子页序号；
+var Index=0;
+//把子页的路径写在数组里面
+var subpages = [&#39;html/home.html&#39;,&#39;html/message.html&#39;,&#39;html/setting.html&#39;];
+
+//所有的plus-*方法写在mui.plusReady中或者后面。
+mui.plusReady(function() {
+    //获取当前页面所属的Webview窗口对象
+    var self = plus.webview.currentWebview();
+    for (var i = 0; i &lt; 3; i++) {
+        //创建webview子页
+        var sub = plus.webview.create(
+            subpages[i], //子页url
+            subpages[i], //子页id
+            {
+                top: &#39;45px&#39;,//设置距离顶部的距离
+                bottom: &#39;50px&#39;//设置距离底部的距离
+            }
+        );
+        //如不是我们设置的默认的子页则隐藏，否则添加到窗口中
+        if (i != Index) {
+            sub.hide();
+        }
+    //将webview对象填充到窗口
+        self.append(sub);
+    }
+});
+</code></pre>
+<p>注：如果Index不是0，需要将nav下的a标签中的<code>.mui-active</code>属性写到对应的a标签下。</p>
+<p>执行完我们会发现home.html的内容显示出来了，但是底部切换还不能，因为这里我们还没有监听底部的点击事件。在进行下一步之前，我们可以先做一个小实验，将上面的代码中的top或者bottom改为0,我们会发现，底部栏或者底部栏会被覆盖，这是因为mui一个重要的<strong>潜规则</strong>，<strong>父子结构的页面子页面会比父页面层级高</strong>，说白了就是子页面可以盖住父页面。这会导致开发者常犯的一个错误：将弹出层或者弹出菜单写在父页面被子页面盖住的bug。</p>
+<blockquote>
+<p>这里的apend()方法在html5plus文档中没有提到，这里的这个方法是将webview对象填充到窗口的方法。</p>
+</blockquote>
+<h4 id="2-">2.选项卡点击事件</h4>
+<p>mui 内部封装了一些常用的方法，其中DOM选择器、事件绑定等事件管理。具体可以参考文档：<a href="http://dev.dcloud.net.cn/mui/util/#selector">选择器</a>、<a href="http://dev.dcloud.net.cn/mui/event/">事件管理</a>。</p>
+<blockquote>
+<p>mui()</p>
+</blockquote>
+<p>mui使用css选择器获取HTML元素，返回mui对象数组。</p>
+<ul>
+<li><code>mui(&quot;p&quot;)</code>：选取所有<code>p</code>元素</li>
+<li><code>mui(&quot;p.title&quot;)</code>：选取所有包含<code>.title</code>类的<code>&lt;p&gt;</code>元素</li>
+</ul>
+<p>若要将mui对象转化成dom对象，可使用如下方法（类似jquery对象转成dom对象）：</p>
+<pre><code class="lang-js">//obj1是mui对象
+var obj1 = mui(&quot;#title&quot;);
+//obj2是dom对象
+var obj2 = obj1[0];
+</code></pre>
+<blockquote>
+<p>.on( event , selector , handler )</p>
+</blockquote>
+<ul>
+<li>event<ul>
+<li>Type: String</li>
+<li>需监听的事件名称，例如：&#39;tap&#39;</li>
+</ul>
+</li>
+<li>selector<ul>
+<li>Type: String
+-选择器</li>
+</ul>
+</li>
+<li>handler<ul>
+<li>Type: Function( Event event )</li>
+<li>事件触发时的回调函数，通过回调中的event参数可以获得事件详情</li>
+</ul>
+</li>
+</ul>
+<p>除了可以使用addEventListener()方法监听某个特定元素上的事件外， 也可以使用.on()方法实现批量元素的事件绑定。</p>
+<p>这里我们将为底部导航按钮添加事件：</p>
+<pre><code class="lang-js">//选项卡点击事件
+mui(&#39;.mui-bar-tab&#39;).on(&#39;tap&#39;, &#39;a&#39;, function(e) {
+    alert(true);
+});
+</code></pre>
+<p>当我们点击底部选项卡的时候会弹出<code>true</code>，这不够，我们要能够分辨当前对象具体是哪一个，有两种思路:</p>
+<ul>
+<li>第一我们能够知道当前点击的a标签所在序号就好了，就是找到<code>index</code>,然后根据上面那个<code>subpages</code>数组，利用<code>plus.webview.show(subpages[index])</code>方法显示。</li>
+<li>我们给当前点击的a标签添加一个可以识别的属性，然后根据那个属性获取当前a的特征，然后就可以显示点击的子页，隐藏当前子页。</li>
+</ul>
+<p>第一种方法需要遍历此案获取<code>index</code>，第二种方法添加一个<code>href</code>很容易拿到子页<code>id</code>，我们采用第二种方案。</p>
+<blockquote>
+<p>getAttribute()</p>
+</blockquote>
+<p>getAttribute() 方法返回指定属性名的属性值。
+提示：如果您希望以<code>Attr</code>对象返回属性，请使用<code>getAttributeNode</code>。</p>
+<p>于是我们可以这样写：</p>
+<pre><code class="lang-js">//当前激活选项
+var activeTab = subpages[Index],title=document.querySelector(&quot;.mui-title&quot;);
+//选项卡点击事件
+mui(&#39;.mui-bar-tab&#39;).on(&#39;tap&#39;, &#39;a&#39;, function(e) {
+    //获取目标子页的id
+    var targetTab = this.getAttribute(&#39;href&#39;);
+    if (targetTab == activeTab) {
+        return;
+    }
+    //更换标题
+    title.innerHTML = this.querySelector(&#39;.mui-tab-label&#39;).innerHTML;
+    //显示目标选项卡
+    plus.webview.show(targetTab);
+    //隐藏当前选项卡
+    plus.webview.hide(activeTab);
+    //更改当前活跃的选项卡
+    activeTab = targetTab;
+});
+</code></pre>
+<h3 id="-">兼容浏览器的处理办法</h3>
+<p>这是后面补充的内容，最开始写的时候没有这个内容，在这里加上吧。为啥要加这个内容呢，因为很多人思维还是比较局限，用mui依然还是用原来的方法，有很多人依然使用href,之所以这么用就是大家改不了习惯，这就是被很多人说的坑。。。但是真的是坑吗？与其说是坑，我觉得是大家思维上没有转变过来，不明白mui为啥要禁用href这种方式，也不明白自己该怎么做。</p>
+<p>下面贴出一个用iframe代替多子webview形式的tabbar在浏览器的兼容处理方法：</p>
+<pre><code class="lang-js">var createIframe = function (el, opt) {
+    var elContainer = document.querySelector(el);
+    var wrapper = document.querySelector(&quot;.mui-iframe-wrapper&quot;);
+    if(!wrapper){
+        // 创建wrapper 和 iframe
+        wrapper = document.createElement(&#39;div&#39;);
+        wrapper.className = &#39;mui-iframe-wrapper&#39;;
+        for(var i in opt.style){
+            wrapper.style[i] = opt.style[i];
+        }
+        var iframe = document.createElement(&#39;iframe&#39;);
+        iframe.src = opt.url;
+        iframe.id = opt.id || opt.url;
+        iframe.name = opt.id;
+        wrapper.appendChild(iframe);
+        elContainer.appendChild(wrapper);
+    }else{
+        var iframe = wrapper.querySelector(&#39;iframe&#39;);
+        iframe.src = opt.url;
+        iframe.id = opt.id || opt.url;
+        iframe.name = iframe.id;
+    }
+}
+</code></pre>
+<p>调用也很简单：</p>
+<pre><code class="lang-js">//当前激活选项
+var activeTab = subpages[Index],title=document.querySelector(&quot;.mui-title&quot;);
+mui(&#39;.mui-bar-tab&#39;).on(&#39;tap&#39;, &#39;a&#39;, function(e) {
+    // 获取目标子页的id
+    var targetTab = this.getAttribute(&#39;href&#39;);
+    if (targetTab == activeTab) {
+        return;
+    }        
+    // 更换标题
+    title.innerHTML = this.querySelector(&#39;.mui-tab-label&#39;).innerHTML;    
+    // 子页内容切换
+    if(mui.os.plus){
+        // 显示目标webview
+        plus.webview.show(targetTab);
+        // 隐藏当前webview
+        plus.webview.hide(activeTab);
+        // 更改当前活跃的选项卡
+        activeTab = targetTab;
+    }else{
+        // 创建iframe代替子页面
+        createIframe(&#39;.mui-content&#39;,{
+            url: targetTab,
+            style: {
+                top: &#39;45px&#39;,//设置距离顶部的距离
+                bottom: &#39;50px&#39;//设置距离底部的距离
+            }
+        });
+    }
+})
+</code></pre>
+<p>这样你就可以一套代码实现在多平台的利用啦，是不是很棒。完整代码可以看这里：
+<a href="https://rawgit.com/zhaomenghuan/mui-demo/master/example/tabbar-with-iframe/tab-webview-main.html">iframe兼容处理tababr的方法</a></p>
+<h3 id="-">双首页配置的优化方案</h3>
+<p>HBuilder8.0.1版更新说明App中有一条：
+<strong>【重要】新增双首页配置（manifest-&gt;plus-&gt;secondwebview），加速首页为双webview模式时的应用启动速度。</strong>
+这对于我们优化app很有帮助，以前的方案中父子页面都在启动页，首页显示会过慢，8.0后的这次大更新可以很好的处理这个问题，官方配置说明见：<a href="http://ask.dcloud.net.cn/article/1196">【示例】双首页secondwebview配置的使用</a>,但是官方文档中没有说明父子页的配置方法，这里给出一种方案：</p>
+<p>1.按照文档配置manifest.json文件中的secondwebview节点
+2.将动态创建子页面放在点击事件中，例如：</p>
+<p>manifest.json文件：</p>
+<pre><code class="lang-js">...
+&quot;secondwebview&quot;: {
+    &quot;launch_path&quot;: &quot;_www/html/home.html&quot;,
+    &quot;id&quot;: &quot;html/home.html&quot;,
+    &quot;top&quot;: &quot;0px&quot;,
+    &quot;bottom&quot;: &quot;51px&quot;
+}
+...
+</code></pre>
+<p>首页的逻辑：</p>
+<pre><code class="lang-js">var subpages = [&#39;html/home.html&#39;, &#39;html/message.html&#39;, &#39;html/person.html&#39;];
+var subpage_style = {
+    top: &#39;0px&#39;,
+    bottom: &#39;51px&#39;
+};
+// 当前激活选项
+var activeTab = subpages[0];
+
+// 创建子页面，首个选项卡页面显示，其它均隐藏；
+var currentWebview;
+mui.plusReady(function() {
+    currentWebview = plus.webview.currentWebview();
+    var secondWebview = plus.webview.getSecondWebview();
+    currentWebview.append(secondWebview);
+});
+
+// 选项卡点击事件
+mui(&#39;.mui-bar-tab&#39;).on(&#39;tap&#39;, &#39;a&#39;, function(e) {
+    var targetTab = this.getAttribute(&#39;href&#39;);
+    if (targetTab == activeTab) {
+        return;
+    }
+
+    var targetWebview = plus.webview.getWebviewById(targetTab);
+    if(!targetWebview){
+        targetWebview = plus.webview.create(targetTab, targetTab, subpage_style);
+        currentWebview.append(targetWebview );
+    }
+    targetWebview.show(&quot;fade-in&quot;,300);
+    // 隐藏当前;
+    plus.webview.hide(activeTab);
+    // 更改当前活跃的选项卡
+    activeTab = targetTab;
+});
+</code></pre>
+<h2 id="-">后记</h2>
+<p>虽然最后实现的效果很简单，好像直接看demo就可以写出来，但是新手甚至写了一段时间的同学也不见得对<code>webview</code>掌握得很好，这篇文章花了很长的篇幅去讲解<code>webview</code>的用法，旨在为新手建立一种学习mui这边的思路，那就是先看html5plus里面的模块，然后看mui对应的文档，最后看<code>hello mui</code>的<code>demo</code>,把握这种学习路线个人觉得是一种最佳的方案。本文作为系列文章第一篇讲代码的，所以做了很多铺垫，所以有一定基础的同学可能会觉得写得并没有什么看点，后面的肯定会有所不一样的。下一篇讲解的是网络请求<code>XMLHttpRequest</code>模块，下一讲会结合<code>mui.ajax</code>和网易云音乐<code>API</code>一起讲解。</p>
+<p>mui-demo仓库地址：</p>
+<blockquote>
+<p><a href="https://github.com/zhaomenghuan/mui-demo">https://github.com/zhaomenghuan/mui-demo</a></p>
+</blockquote>
+<p>写文章不容易，也许写这些代码就几分钟的事，写一篇大家好接受的文章或许需要几天的酝酿，然后加上几天的码字，累并快乐着。如果文章对您有帮助请我喝杯咖啡吧！</p>

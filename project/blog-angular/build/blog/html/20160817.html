@@ -1,0 +1,228 @@
+<h1 id="-base64-">录音文件与Base64编码相互转换的方法</h1>
+<blockquote>
+<ul>
+<li><strong>文章来源：小青年原创</strong></li>
+<li><strong>发布时间：2016-08-17</strong></li>
+<li><strong>关键词：mui，html5+，base64，录音</strong></li>
+<li><strong>转载需标注本文原始地址: <a href="http://zhaomenghuan.github.io/#!/blog/20160817">http://zhaomenghuan.github.io/#!/blog/20160817</a></strong></li>
+</ul>
+</blockquote>
+<h2 id="-">前言</h2>
+<p>最近有几个朋友一直在问语音文件怎么转base64字符串进行发送上传，base64字符串又如何转成文件，论坛中已经有多篇问题的帖子有介绍，这里只是稍微整理，方便大家可以更加方便的使用，首先看效果：</p>
+<p><img src="http://oo1uw74rb.bkt.clouddn.com/20160817001.jpg" alt="Alt text"></p>
+<h2 id="-base64-">录音文件转成base64字符串</h2>
+<p>hello mui 演示app中im-chat.html有演示案例，通过hold和release控制录音的长度，即长按按钮开始录音，释放就停止录音，上拉取消发送录音。</p>
+<p><strong>html部分</strong>：</p>
+<pre><code class="lang-html">&lt;button id=&quot;recorder&quot; type=&quot;button&quot; class=&quot;mui-btn mui-btn-blue mui-btn-block&quot;&gt;录制语音文件转base64字符串&lt;/button&gt;
+</code></pre>
+<p><strong>js部分</strong>：</p>
+<p>mui.init中首先需要配置<a href="http://dev.dcloud.net.cn/mui/event/#gesture">手势事件</a>：</p>
+<pre><code class="lang-js">mui.init({
+    gestureConfig: {
+        tap: true, //默认为true
+        doubletap: true, //默认为false
+        longtap: true, //默认为false
+        swipe: true, //默认为true
+        drag: true, //默认为true
+        hold: true, //默认为false，不监听
+        release: true //默认为false，不监听
+    }
+});
+</code></pre>
+<p>录音逻辑控制，按住按钮弹出录音提示框，并且对录音时长进行控制，录音时间太短取消操作，手指上划，取消发送。</p>
+<pre><code class="lang-js">var MIN_SOUND_TIME = 800;
+var recorder = null;
+var startTimestamp = null;
+var stopTimestamp = null;
+var stopTimer = null;
+var recordCancel = false;
+
+var soundAlert = document.getElementById(&quot;sound-alert&quot;);
+var audioTips = document.getElementById(&quot;audio-tips&quot;);
+
+// 控制录音弹出框是否播放
+var setSoundAlertVisable=function(show){
+    if(show){
+        soundAlert.style.display = &#39;block&#39;;
+        soundAlert.style.opacity = 1;
+    }else{
+        soundAlert.style.opacity = 0;
+        //  完成再真正隐藏
+        setTimeout(function(){
+            soundAlert.style.display = &#39;none&#39;;
+        },200);
+    }
+};
+
+mui.plusReady(function () {
+    /**
+     * 录制语音文件转base64字符串
+     */
+    // 按住录音（长按开始录音）
+    document.querySelector(&#39;#recorder&#39;).addEventListener(&#39;hold&#39;,function () {
+        recordCancel = false;
+    if(stopTimer)clearTimeout(stopTimer);
+
+    audioTips.innerHTML = &quot;手指上划，取消发送&quot;;
+    soundAlert.classList.remove(&#39;rprogress-sigh&#39;);
+    setSoundAlertVisable(true);
+
+    // 获取当前设备的录音对象
+        recorder = plus.audio.getRecorder();
+        startTimestamp = (new Date()).getTime();
+          recorder.record({
+              filename:&quot;_doc/audio/&quot;,
+              format:&quot;amr&quot; //iOS平台支持&quot;wav&quot;、&quot;aac&quot;、&quot;amr&quot;格式，默认为&quot;wav&quot;
+          }, function (path) {
+              if (recordCancel) return;
+            console.log(&quot;path:&quot;+path);
+            Audio2dataURL(path);
+        }, function ( e ) {
+            mui.toast(&quot;录音出现异常: &quot; + e.message );
+        });
+    })
+
+    // 释放保存（松手保存）
+    document.querySelector(&#39;#recorder&#39;).addEventListener(&#39;release&#39;,function () {
+        if (audioTips.classList.contains(&quot;cancel&quot;)) {
+            audioTips.classList.remove(&quot;cancel&quot;);
+            audioTips.innerHTML = &quot;手指上划，取消发送&quot;;
+        }
+        // 判断录音时间
+        stopTimestamp = (new Date()).getTime();
+        if (stopTimestamp - startTimestamp &lt; 800) {
+            audioTips.innerHTML = &quot;录音时间太短&quot;;
+            soundAlert.classList.add(&#39;rprogress-sigh&#39;);
+            recordCancel = true;
+            stopTimer=setTimeout(function(){
+                setSoundAlertVisable(false);
+            },800);
+        }else{
+            setSoundAlertVisable(false);
+        }
+        recorder.stop();
+    })
+
+    // 拖动屏幕（手指上划，取消发送）
+    document.body.addEventListener(&#39;drag&#39;, function(event) {
+        if (Math.abs(event.detail.deltaY) &gt; 50) {
+            if (!recordCancel) {
+                recordCancel = true;
+                if (!audioTips.classList.contains(&quot;cancel&quot;)) {
+                    audioTips.classList.add(&quot;cancel&quot;);
+                }
+                audioTips.innerHTML = &quot;松开手指，取消发送&quot;;
+            }
+        } else {
+            if (recordCancel) {
+                recordCancel = false;
+                if (audioTips.classList.contains(&quot;cancel&quot;)) {
+                    audioTips.classList.remove(&quot;cancel&quot;);
+                }
+                audioTips.innerHTML = &quot;手指上划，取消发送&quot;;
+            }
+        }
+      }, false);
+})
+</code></pre>
+<p>当录音成功后，我们可以将录音文件转成base64字符串，用于网络传输。</p>
+<pre><code class="lang-js">/**
+ * 录音语音文件转base64字符串
+ * @param {Object} path
+ */
+function Audio2dataURL (path) {
+    plus.io.resolveLocalFileSystemURL(path, function(entry){
+        entry.file(function(file){
+            var reader = new plus.io.FileReader();
+            reader.onloadend = function (e) {
+                console.log(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        },function(e){
+            mui.toast(&quot;读写出现异常: &quot; + e.message );
+        })
+    })
+}
+</code></pre>
+<p>至此我们完成了录音语音文件转base64字符串，反过来我们需要将base64字符串转成语音文件。</p>
+<h2 id="base64-">base64字符串转成语音文件</h2>
+<p>我们可以封装如下方法：</p>
+<pre><code class="lang-js">/**
+ * base64字符串转成语音文件(参考http://ask.dcloud.net.cn/question/16935)
+ * @param {Object} base64Str
+ * @param {Object} callback
+ */
+function dataURL2Audio (base64Str, callback) {
+    var base64Str = base64Str.replace(&#39;data:audio/amr;base64,&#39;,&#39;&#39;);
+    var audioName = (new Date()).valueOf() + &#39;.amr&#39;;
+
+    plus.io.requestFileSystem(plus.io.PRIVATE_DOC,function(fs){
+        fs.root.getFile(audioName,{create:true},function(entry){
+            // 获得平台绝对路径
+            var fullPath = entry.fullPath;
+            if(mui.os.android){  
+                // 读取音频
+                var Base64 = plus.android.importClass(&quot;android.util.Base64&quot;);
+                var FileOutputStream = plus.android.importClass(&quot;java.io.FileOutputStream&quot;);
+                try{
+                    var out = new FileOutputStream(fullPath);
+                    var bytes = Base64.decode(base64Str, Base64.DEFAULT);
+                    out.write(bytes); 
+                    out.close();
+                    // 回调
+                    callback &amp;&amp; callback(entry);
+                }catch(e){
+                      console.log(e.message);
+                }
+            }else if(mui.os.ios){
+                var NSData = plus.ios.importClass(&#39;NSData&#39;);
+                var nsData = new NSData();
+                nsData = nsData.initWithBase64EncodedStringoptions(base64Str,0);
+                if (nsData) {
+                    nsData.plusCallMethod({writeToFile: fullPath,atomically:true});
+                    plus.ios.deleteObject(nsData);
+                }
+                // 回调
+                  callback &amp;&amp; callback(entry);
+            }
+        })
+    })
+}
+</code></pre>
+<p>调用方法如下：</p>
+<p>html部分：</p>
+<pre><code class="lang-js">&lt;button id=&quot;player&quot; type=&quot;button&quot; class=&quot;mui-btn mui-btn-blue mui-btn-block&quot;&gt;base64字符串转成语音文件播放&lt;/button&gt;
+</code></pre>
+<p>js部分：</p>
+<pre><code class="lang-js">/**
+ * base64字符串转成语音文件播放
+ */
+document.querySelector(&#39;#player&#39;).addEventListener(&#39;tap&#39;,function () {
+        // 语音文件Base64编码（由于编码过长影响阅读体验，请查看工程验证）
+     var base64Str = &#39; &#39; 
+
+        // 转成.amr文件播放
+    dataURL2Audio(base64Str, function(entry){
+        var toURL = entry.toURL();
+        // 播放音频
+        playAudio(toURL);
+    })
+})
+
+/**
+ * 播放音频
+ * @param {Object} path
+ */
+function playAudio (path) {
+    var player = plus.audio.createPlayer(path);
+    player.play(function(){
+        mui.toast(&quot;播放成功&quot;);
+    }, function(e) {
+        mui.toast(&quot;播放失败&quot;);
+    });    
+}
+</code></pre>
+<h2 id="-">写在后面</h2>
+<p>本文以语音文件为例说明5+中语音文件与Base64编码的相互转换，对于图片与Base64编码的转换方法请参考<a href="http://www.html5plus.org/doc/zh_cn/nativeobj.html#plus.nativeObj.Bitmap">nativeObj Bitmap: 原生图片对象</a>，可以通过loadBase64Data方法加载Base64编码格式图片到Bitmap对象，通过toBase64Data方法获取图片的Base64编码数据。对于一般性文件，建议使用h5 File API，详细可以参考我这篇文章：
+<a href="https://segmentfault.com/a/1190000006600936">JavaScript进阶学习（三）—— 基于html5 File API的文件操作</a></p>
+<p>本文详细代码请查看这里：<a href="https://github.com/zhaomenghuan/mui-demo/master/example/Audio/">演示工程</a>。</p>

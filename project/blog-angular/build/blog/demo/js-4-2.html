@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			.section {
+		  		box-shadow: 2px 2px 8px rgb(204, 204, 204);
+		  		padding: 30px;
+		  		margin: 30px;
+			}
+			.red {
+		  		color: #f00;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app" class="section">
+  			Hello <span class='{{css}}'>{{name}}</span>!
+  			<p>age: {{age}}</p>
+		</div>
+		
+		<script type="text/javascript">
+			function MVVM(opt) {
+				this.dom = document.querySelector(opt.el);
+			  	this.data = opt.data || {};
+			  	this.renderDom(this.dom);
+			}
+			
+			MVVM.prototype = {
+				init: {
+					sTag: '{{',
+					eTag: '}}'
+				},
+				each: function(obj, fn){
+					Array.prototype.forEach.call(obj, function(item){
+						fn.call(item, item);
+					})
+				},
+				render: function (node) {
+				    var self = this;
+				    var sTag = self.init.sTag;
+				    var eTag = self.init.eTag;
+				    
+				    var matchs = node.textContent.split(sTag);
+				    if (matchs.length){
+				    	var ret = '';
+					    for (var i = 0; i < matchs.length; i++) {
+					      	var match = matchs[i].split(eTag);
+						    if (match.length == 1) {
+						        ret += matchs[i];
+						    } else {
+						        ret = self.data[match[0]];
+						    }
+						    node.textContent = ret;
+					    }
+				    }
+				},
+				renderDom: function(dom) {
+					var self = this;
+					
+					var attrs = dom.attributes;
+					var nodes = dom.childNodes;
+					
+		    		self.each(attrs, function() {
+		      			self.render(this);
+		    		});
+
+		    		self.each(nodes, function() {
+	      				if (this.nodeType === 1) {
+	        				return self.renderDom(this)
+	      				}
+	      				self.render(this);
+	    			});
+				}
+			}
+				
+		  	var app = new MVVM({
+		  		el: '#app',
+			  	data: {
+			    	name: 'zhaomenghuan',
+			    	age: '22',
+			    	css: 'red',
+			  	}
+			});
+			
+			// 访问对象数据
+			console.log(app.data.name); // "zhaomenghuan"
+		</script>
+	</body>
+</html>

@@ -1,0 +1,79 @@
+div.detail
+    div.back(ng-click="state.go('blog.list')")
+        img(src="./assets/images/back.png")
+        span 返回列表
+
+    page-content.markdown-body
+
+    md-toolbar.md-theme-light
+        h2.md-toolbar-tools
+            span 关注点赞
+    div.focus
+        ul.md-inline-form
+            li 博客：
+                a(href="http://zhaomenghuan.github.io", target="_blank") http://zhaomenghuan.github.io
+            li github：
+                a(href="https://github.com/zhaomenghuan", target="_blank") https://github.com/zhaomenghuan
+            li segmentfault：
+                a(href="https://segmentfault.com/u/zhaomenghuan", target="_blank") https://segmentfault.com/u/zhaomenghuan
+            li 简书：
+                a(href="http://www.jianshu.com/u/de1f0b8eaf18", target="_blank") http://www.jianshu.com/u/de1f0b8eaf18
+
+    div.donation
+        img(src="./assets/images/donation.png")
+
+    md-toolbar.md-theme-light
+        h2.md-toolbar-tools
+            span 评论留言
+
+    form.md-inline-form(name="commentForm", ng-submit="submitComment()")
+        div(layout="row")
+            md-input-container(flex="100%/3")
+                label 姓名
+                input(name="userName", ng-model="user.name", ng-required="true", md-maxlength="20")
+                div(ng-messages="user.name.$error")
+                    div(ng-message="required", ng-show="commentForm.userName.$error.required") 您的姓名必填
+
+            md-input-container(flex="100%/3")
+                label 邮箱
+                input(name="userEmail", ng-model="user.email", type="email", ng-required="true")
+                div(ng-messages="user.email.$error")
+                    div(ng-message="required", ng-show="commentForm.userEmail.$error.required") 您的邮箱必填，但不会被公开
+
+            md-input-container(flex="100%/3")
+                label 网站
+                input(ng-model="user.site")
+
+        md-input-container.md-block
+            label 留言评论
+            textarea(name="userMsg", ng-model="user.msg", md-maxlength="500", rows="5", md-select-on-focus, ng-required="true")
+            div(ng-messages="user.msg.$error")
+                div(ng-message="required", ng-show="commentForm.userMsg.$error.required") 您的留言评论必填
+                div(ng-message="maxlength", ng-show="commentForm.userMsg.$error.maxlength") 您的留言评论不得多于500个字符
+
+        md-button.md-primary.app-pull-right.submit(type="submit") 提交
+
+        div(style="clear:both")
+
+        md-list.md-dense.comments-list
+            md-list-item.md-2-line(ng-repeat="item in comments track by $index")
+                img.md-avatar(ng-src="{{item.avatar || './assets/images/default-avatar.png'}}" alt="{{item.name}}")
+                div.md-list-item-text
+                    h3
+                        span.name
+                            a(ng-if="item.site", href="{{item.site}}", target="_blank") {{item.name}}
+                            a(ng-if="!item.site") {{item.name}}
+                        span.time {{item.time | date : 'yyyy年MM月dd日 HH:mm'}}
+                    p {{item.msg}}
+                    div.action-btn
+                        img(src="./assets/images/reply.png")
+                        span 回复
+                    div.action-btn
+                        img(src="./assets/images/delete.png")
+                        span 删除
+                    div(style="clear:both")
+
+                    ul.reply-list
+                        li(ng-repeat="re in item.reply track by $index")
+                            p {{re}}
+

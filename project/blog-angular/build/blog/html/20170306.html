@@ -1,0 +1,584 @@
+<h1 id="angular-angular-">Angular系列学习笔记（一）—— 聊聊angular的模块化</h1>
+<blockquote>
+<ul>
+<li><strong>文章来源：小青年原创</strong></li>
+<li><strong>发布时间：2017-3-6</strong></li>
+<li><strong>关键词：angular，vue，模块化，$scope，依赖注入，service</strong></li>
+<li><strong>转载需标注本文原始地址: <a href="http://zhaomenghuan.github.io/#!/blog/20170306">http://zhaomenghuan.github.io/#!/blog/20170306</a></strong></li>
+</ul>
+</blockquote>
+<h2 id="-">前言</h2>
+<p>近来换工作了，由于团队技术需要，不得不从vue.js迁移到angular.js，不过这也是一个学习angular的机会，顺便也将这两个框架做一些对比，为了方便其他小伙伴，将学习过程中的内容记录下来。由开始的不太习惯到现在也能够习惯angular的写法，着实在思维上有很大的改变，所以这个系列的文章会记录一下自己的学习过程，本文会由浅及深一步步去解读vue.js和angular.js的区别。由于时间关系，这篇文章断断续续耗时几周，不求什么，只希望在这个过程中将angular相关的一些特性去梳理一下，由于是系列开篇，文章并没有深入探讨源码和原理，后续会写更多个人的思考和探索。</p>
+<h2 id="vuejs-vs-angular-">vuejs  vs  angular之初相见</h2>
+<p>对于vue.js我们都需要通过创建一个Vue实例指定作用范围，对于angular只需要ng-app指令就可以。</p>
+<p>vue.js的姿势：</p>
+<pre><code class="lang-js">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;app&quot;&gt;
+    {{ message }}
+    &lt;button v-on:click=&quot;changeView&quot;&gt;changeView&lt;/button&gt;
+&lt;/div&gt;
+&lt;script src=&quot;//cdn.bootcss.com/vue/2.1.10/vue.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    var app = new Vue({
+        el: &#39;#app&#39;,
+        data: {
+            message: &#39;Hello world!&#39;
+        },
+        methods: {
+            changeView: function(){
+                this.message = &#39;hello vuejs!&#39;;
+                // 或 app.$data.message = &#39;hello vuejs!&#39;
+            }
+        }
+    })
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>angular的姿势：</p>
+<pre><code class="lang-js">&lt;!DOCTYPE html&gt;
+&lt;html ng-app=&quot;app&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div ng-controller=&quot;helloCtrl&quot;&gt;
+        {{message}}
+        &lt;button ng-click=&quot;changeView()&quot;&gt;changeView&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;script src=&quot;//cdn.bootcss.com/angular.js/1.6.0/angular.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;application/javascript&quot;&gt;
+        var app = angular.module(&#39;app&#39;, []);
+        app.controller(&#39;helloCtrl&#39;, function ($scope) {
+            $scope.message = &#39;hello world&#39;;
+            $scope.changeView = function () {
+                $scope.message = &#39;hello angular.js!&#39;;
+            }
+        })
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>这个例子虽然再简单不过，对于项目开发没有半点用处，但是对于理解vue.js和angular.js的区别有一定的借鉴意义，vue.js中总体的思路是实例化Vue对象，我们通过el属性指定控制的dom范围，data是数据模型，可以通过实例化后的对象app.$data访问数据，在方法中或者<a href="http://cn.vuejs.org/v2/guide/instance.html#生命周期图示">生命周期钩子</a>如mounted中可以使用this获取实例上下文，vuejs中没有控制器的概念，属于典型的MVVM架构。然而我们这篇文章不是讲vue.js，因为如果你使用vue.js，那么直接看文档很好理解，无需我多言，这里我们想重点说说angular。</p>
+<p>经常听人说vue.js语法优雅，我想应该是由于vue.js结构更加清晰吧，数据模型和操作分得更清晰，就从命名出发更简单吧，$scope是什么鬼。好吧，查了一下：scope（范围），我们姑且先从字面含义这么理解吧，但是从这例子中发现$scope多次使用，另外不能被改名，不然不能用，我们姑且认为是个神奇的玩意。angular中ng-click的指令和vue.js无大的区别，这里不多言，这里重点想谈谈模块化和angular的依赖注入。</p>
+<h2 id="vuejs-vs-angular-">vuejs vs angular之数据模型共享</h2>
+<p>在vue.js中是通过组件树实现模块化的，而angular通过作用域$scope实现模块化。对于vue.js中模块化的最佳实践是：</p>
+<p><strong> .vue单文件组件 + 模块化标准（common.js或者es6 module) + webpack(或Browserify）。</strong></p>
+<p>而其中核心部分就是组件，用官方的话说就是，组件（Component）是 Vue.js 最强大的功能之一，组件可以扩展 HTML 元素，封装可重用的代码，在较高层面上，组件是自定义元素， Vue.js 的编译器为它添加特殊功能，在有些情况下，组件也可以是原生 HTML 元素的形式，以 is 特性扩展。</p>
+<p>如何构建一个组件，组件之前数据如何共享，这是开发中必须要学习的内容。vue.js组件实例的作用域是孤立的，这意味着不能并且不应该在子组件的模板内直接引用父组件的数据，可以使用 props 把数据传给子组件。另外vue.js中提倡单向数据流：当父组件的属性变化时，将传导给子组件，但是不会反过来。这是为了防止子组件无意修改了父组件的状态——这会让应用的数据流难以理解。当子组件需要更新父组件的状态时，我们可以通过事件触发。下面是一个利用props传递数据和使用事件触发父组件状态的典型例子：</p>
+<pre><code class="lang-js">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;
+        {{ message }}
+        &lt;button v-on:click=&quot;parentAtion&quot;&gt;parentAtion&lt;/button&gt;
+        &lt;child v-bind:param=&quot;message&quot;  v-on:childfn=&quot;fromChild&quot;&gt;&lt;/child&gt;
+    &lt;/div&gt;
+
+    &lt;script type=&quot;text/x-template&quot; id=&quot;child-tpl&quot;&gt;
+        &lt;div&gt;
+            &lt;span&gt;{{param}}&lt;/span&gt;
+            &lt;button v-on:click=&quot;childAtion&quot;&gt;childAtion&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/script&gt;
+
+    &lt;script src=&quot;//cdn.bootcss.com/vue/2.1.10/vue.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+        Vue.component(&#39;child&#39;, {
+            template: &#39;#child-tpl&#39;,
+              props: [&#39;param&#39;],
+              methods: {
+                  childAtion: function(){
+                      // 触发事件
+                      this.$emit(&#39;childfn&#39;, &#39;child component&#39;);
+                  }
+              }
+        });
+
+        var app = new Vue({
+            el: &#39;#app&#39;,
+            data: {
+                message: &#39;Hello vuejs!&#39;
+            },
+            methods: {
+                parentAtion: function(){
+                    this.message = &#39;parent component&#39;;
+                },
+                fromChild: function(msg){
+                    this.message = msg;
+                }
+            }
+        })
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>每个 Vue 实例都实现了<a href="https://cn.vuejs.org/v2/api/#Instance-Methods-Events">事件接口(Events interface)</a>，即：</p>
+<ul>
+<li>使用 $on(eventName) 监听事件</li>
+<li>使用 $emit(eventName) 触发事件</li>
+</ul>
+<blockquote>
+<p>Vue的事件系统分离自浏览器的<a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget">EventTarget API</a>。尽管它们的运行类似，但是$on和 $emit <strong>不是</strong>addEventListener和 dispatchEvent的别名。</p>
+</blockquote>
+<p>父组件可以在使用子组件的地方直接用 v-on 来监听子组件触发的事件。对于非父子组件通信的通信，在简单的场景下，使用一个空的 Vue 实例作为中央事件总线：</p>
+<pre><code class="lang-js">var bus = new Vue()
+// 触发组件 A 中的事件
+bus.$emit(&#39;id-selected&#39;, 1)
+// 在组件 B 创建的钩子中监听事件
+bus.$on(&#39;id-selected&#39;, function (id) {
+  // ...
+})
+</code></pre>
+<p>在更多复杂的情况下，你应该考虑使用专门的<a href="https://cn.vuejs.org/v2/guide/state-management.html#类-Flux-状态管理的官方实现">状态管理</a>。</p>
+<p>对于angular 而言，ng-controller指令指定了作用范围，通过$scope对象控制作用域，$scope层层嵌套形成父子关系或者兄弟并列关系，而父子作用域是通过原型继承实现，子作用域可以访问父作用域的数据模型，反过来不行，同理如果父级作用域中的状态改变会影响子作用域，反过来子作用域中的状态改变不会影响父级作用域。</p>
+<pre><code class="lang-js">&lt;!DOCTYPE html&gt;
+&lt;html ng-app=&quot;app&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div ng-controller=&quot;parentCtrl&quot;&gt;
+        {{message}}
+        &lt;button ng-click=&quot;parentAtion()&quot;&gt;parentAtion&lt;/button&gt;
+        &lt;div ng-controller=&quot;childCtrl&quot;&gt;
+            {{message}}
+            &lt;button ng-click=&quot;childAtion()&quot;&gt;childAtion&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;script src=&quot;js/angular.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;application/javascript&quot;&gt;
+        var app = angular.module(&#39;app&#39;, []);
+        app.controller(&#39;parentCtrl&#39;, function ($scope) {
+            $scope.message = &#39;hello angular&#39;;
+            $scope.parentAtion = function () {
+                $scope.message = &#39;parent scope&#39;;
+            }
+        })
+
+        app.controller(&#39;childCtrl&#39;, function ($scope) {
+            $scope.childAtion = function () {
+                $scope.message = &#39;child scope&#39;;
+            }
+        })
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>由于原型继承的关系，修改父级对象中的message会同时修改子对象中的值，但反之则不行。如果我们想在子级控制器中改变父对象中的值，则需要通过引用进行共享。</p>
+<pre><code class="lang-js">&lt;!DOCTYPE html&gt;
+&lt;html ng-app=&quot;app&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div ng-controller=&quot;parentCtrl&quot;&gt;
+        {{dataModal.message}}
+        &lt;button ng-click=&quot;parentAtion()&quot;&gt;parentAtion&lt;/button&gt;
+        &lt;div ng-controller=&quot;childCtrl&quot;&gt;
+            {{dataModal.message}}
+            &lt;button ng-click=&quot;childAtion()&quot;&gt;childAtion&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;script src=&quot;js/angular.min.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;application/javascript&quot;&gt;
+        var app = angular.module(&#39;app&#39;, []);
+        app.controller(&#39;parentCtrl&#39;, function ($scope) {
+            $scope.dataModal = {
+                message: &#39;hello angular&#39;
+            }
+            $scope.parentAtion = function () {
+                $scope.dataModal.message = &#39;parent scope&#39;;
+            }
+        })
+
+        app.controller(&#39;childCtrl&#39;, function ($scope) {
+            $scope.childAtion = function () {
+                $scope.dataModal.message = &#39;child scope&#39;;
+            }
+        })
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>问题的本质在于字符串、数字和布尔型变量是值复制，数组、对象和函数则是引用复制，通过引用共享可以在子级作用域内部改变它会影响父级作用域的数据模型状态。</p>
+<p>另外我们通过chrome的一个插件AngularJS Batarang可以很清晰的看出$scope对象的继承关系，会发现每个$scope对象都会有个$id，以及对于作用域$scope下的数据模型，如下：</p>
+<p><img src="http://upload-images.jianshu.io/upload_images/1945738-cb548da6849ab98e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="AngularJS Batarang插件效果"></p>
+<p>需要说明的是ng-app对应的作用域是全局的，我们一般使用$rootScope对象表示，对应的$id等于1。</p>
+<p>除了通过引用复制实现数据共享，我们也可以使用类似vue.js中的事件机制。</p>
+<p><strong>angular事件广播：</strong></p>
+<ul>
+<li>$broadcast：只能向child controller传递event与data</li>
+<li>$emit：只能向parent controller传递event与data</li>
+</ul>
+<pre><code class="lang-js">$scope.$broadcast(name, data);
+$scope.$emit(name, data);
+</code></pre>
+<p><strong>angular事件监听：</strong></p>
+<ul>
+<li>$on：接收event与data</li>
+</ul>
+<pre><code class="lang-js">$scope.$on(eventName, function(event, data){
+  // 这里写监听逻辑...
+})
+</code></pre>
+<p>在$on的方法中的event事件参数，其对象的属性和方法如下：</p>
+<table>
+<thead>
+<tr>
+<th>事件属性</th>
+<th style="text-align:center">含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>event.targetScope</td>
+<td style="text-align:center">发出或者传播原始事件的作用域</td>
+</tr>
+<tr>
+<td>event.currentScope</td>
+<td style="text-align:center">目前正在处理的事件的作用域</td>
+</tr>
+<tr>
+<td>event.name</td>
+<td style="text-align:center">事件名称</td>
+</tr>
+<tr>
+<td>event.stopPropagation()</td>
+<td style="text-align:center">一个防止事件进一步传播(冒泡/捕获)的函数(这只适用于使用<code>$emit</code>发出的事件)</td>
+</tr>
+<tr>
+<td>event.preventDefault()</td>
+<td style="text-align:center">这个方法实际上不会做什么事，但是会设置<code>defaultPrevented</code>为true。直到事件监听器的实现者采取行动之前它才会检查<code>defaultPrevented</code>的值。</td>
+</tr>
+<tr>
+<td>event.defaultPrevented</td>
+<td style="text-align:center">如果调用了<code>preventDefault</code>则为true</td>
+</tr>
+</tbody>
+</table>
+<p>上述的例子可以改写为：</p>
+<pre><code class="lang-js">var app = angular.module(&#39;app&#39;, []);
+app.controller(&#39;parentCtrl&#39;, function ($scope) {
+    $scope.message = &#39;hello angular&#39;;
+    $scope.parentAtion = function () {
+        $scope.message = &#39;parent scope&#39;;
+    }
+
+    // 监听事件
+    $scope.$on(&#39;sendMsg&#39;, function(event, data){    
+        $scope.message = data;
+    })
+})
+
+app.controller(&#39;childCtrl&#39;, function ($scope) {
+    $scope.childAtion = function () {
+        // 触发事件
+        $scope.$emit(&#39;sendMsg&#39;, &#39;child scope&#39;);
+    }
+})
+</code></pre>
+<h2 id="angular-">angular 依赖注入</h2>
+<p>前面我们对比了angular和vue对于数据模型共享的处理方式，发现两个框架在整体上大致相同，在细微上有所区别。对于一个大型模块化工程而言，除了需要处理数据模型数据流的问题，插件和依赖的处理同样也是实现模块化必不可少的一部分。我们如何将我们的应用分成一个个小模块，互不干扰高度自治，但是却又能够相互依赖。在vue中我们是通过构建工具例如webpack+模块化标准来实现，在angular中是通过依赖注入（Dependency Injection）实现的。</p>
+<p>这里我们先来看一下知乎上的一个问题：<a href="https://www.zhihu.com/question/28097646">AngularJS中的依赖注入实际应用场景？</a>依赖注入是一个设计模式,遵循<strong>依赖倒转原则(Dependence Inversion Priciple, DIP)</strong>。关于依赖注入的实现原理后面再做深入探讨，我们先可以认为angular提供了一套机制可以很好的解决模块之间相互依赖的问题。</p>
+<p>angular是用$provider对象来实现自动依赖注入机制，注入机制通过调用一个provide的$get()方法，把得到的对象作为参数进行相关调用。例如：</p>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveCtrl&quot;&gt;
+    {{message}}
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&#39;app&#39;, []);    
+    //  使用provider方法创建服务
+    app.provider(&#39;dataServe&#39;,{  
+        $get: function() {  
+            return {  
+                message:&quot;dataServe Provide&quot;  
+            };  
+        }  
+    }); 
+
+    app.controller(&#39;serveCtrl&#39;, function ($scope, dataServe) {
+        // 调用服务
+        $scope.message = dataServe.message;
+    })
+&lt;/script&gt;
+</code></pre>
+<p>这里我们演示了angular中依赖注入的一个简单例子，在serveCtrl控制器中我们通过将dataServe作为函数参数名写入，就可以访问dataServe服务的内容，从而实现模块解耦。</p>
+<p>上面是一种实现方法，但不是最佳实践，我们一步步说明其他写法。</p>
+<p>首先我们需要知道在angular中声明和引用一个模块的方法：
+声明模块的写法如下：</p>
+<pre><code class="lang-js">angular.module(name, [requires], [configFn]);
+
+name：字符串类型，代表模块的名称；
+requires：字符串的数组，代表该模块依赖的其他模块列表，如果不依赖其他模块，用空数组即可；
+configFn：用来对该模块进行一些配置。
+
+函数返回模块的引用
+</code></pre>
+<p>使用模块的方法：</p>
+<pre><code class="lang-js">angular.module(name)
+</code></pre>
+<p>上面创建服务，我们可以通过$provide服务实现：</p>
+<pre><code class="lang-js">angular.module(&#39;app&#39;, [], function($provide){
+    $provide.provider(&#39;dataServe&#39;, function(){
+        this.$get = function(){
+            return {
+                message:&quot;dataServe Provide&quot;  
+            }
+        }
+    })
+}).controller(&#39;serveCtrl&#39;, function ($scope, dataServe) {
+    // 调用服务
+    $scope.message = dataServe.message;
+})
+
+或
+
+var app = angular.module(&#39;app&#39;, []);
+app.config(function($provide){
+    $provide.provider(&#39;dataServe&#39;, function(){
+        this.$get = function(){
+            return {
+                message:&quot;dataServe Provide&quot;  
+            }
+        }
+    })
+})
+app.controller(&#39;serveCtrl&#39;, function ($scope, dataServe) {
+    $scope.message = dataServe.message;
+})
+</code></pre>
+<h3 id="-">创建服务的几种常用方法</h3>
+<p>上述我们使用provider和$provide.provider两种不同的写法，但是都是需要写$get函数，为了简化创建服务的过程，angualr提供了其他的五种方法：</p>
+<blockquote>
+<p>constant：定义常量，定义的值不能被改变，可以被注入到任何地方，但是不能被装饰器(decorator)装饰；</p>
+</blockquote>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveCtrl&quot;&gt;
+    {{message}}
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&#39;app&#39;, []);
+    app.config(function($provide) {
+        $provide.constant(&#39;constantServe&#39;, &#39;constant serve&#39;);
+    })
+    app.controller(&#39;serveCtrl&#39;, function($scope, constantServe) {
+        $scope.message = constantServe;
+    }) 
+&lt;/script&gt;
+</code></pre>
+<p>语法糖：</p>
+<pre><code class="lang-js">app.constant(&#39;constantServe&#39;, &#39;constant serve&#39;);
+</code></pre>
+<blockquote>
+<p>value：可以是string,number甚至function,和constant的不同之处在于，它可以被修改，不能被注入到config中，可以被decorator装饰</p>
+</blockquote>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveCtrl&quot;&gt;
+    &lt;button ng-click=&quot;showTips()&quot;&gt;show tips&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&#39;app&#39;, []);    
+    app.value(&#39;valueServe&#39;, function(){
+        alert(&quot;哈哈&quot;);
+    })
+    app.controller(&#39;serveCtrl&#39;, function ($scope, valueServe) {
+        $scope.showTips = valueServe;
+    })
+&lt;/script&gt;
+</code></pre>
+<blockquote>
+<p>factory：factory为自定义工厂，是注册服务的最常规方式，它可返回任何对象，包括基本的数据类型。</p>
+</blockquote>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveCtrl&quot;&gt;
+    {{message}}
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&#39;app&#39;, []);
+    app.config(function($provide){
+        $provide.factory(&#39;factoryServe&#39;, function(){
+            return {
+                message: &#39;factory serve&#39;
+            }
+        })
+    })
+    app.controller(&#39;serveCtrl&#39;, function ($scope, factoryServe) {
+        $scope.message = factoryServe.message
+    })
+&lt;/script&gt;
+</code></pre>
+<p>语法糖：</p>
+<pre><code class="lang-js">app.factory(&#39;factoryServe&#39;, function(){
+    return {
+        message: &#39;factory serve&#39;
+    }
+})
+</code></pre>
+<p> factory就是通过provider第二个参数为对象的方法实现，factory底层通过调用$provide.provider(name, {$get: $getFn})，而$getFn就是自定义factory的参数，即factory所传的方法需返回一个对象，这个对象会绑定到provider的$get属性上。</p>
+<blockquote>
+<p>service：当使用service创建服务的时候，相当于使用new关键词进行了实例化。因此，你只需要在this上添加属性和方法，然后，服务就会自动的返回this。当把这个服务注入控制器的时候，控制器就可以访问在那个对象上的属性了。</p>
+</blockquote>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveCtrl&quot;&gt;
+    {{message}}
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&#39;app&#39;, []);
+    app.config(function($provide){
+        $provide.service(&#39;serviceServe&#39;, function(){
+            this.message = &#39;factory serve&#39;;
+        })
+    })
+    app.controller(&#39;serveCtrl&#39;, function ($scope, serviceServe) {
+        $scope.message = serviceServe.message
+    })
+&lt;/script&gt;
+</code></pre>
+<p>语法糖：</p>
+<pre><code class="lang-js">app.service(&#39;serviceServe&#39;, function(){
+    this.message = &#39;factory serve&#39;;
+})
+</code></pre>
+<blockquote>
+<p>decorator：provider里面的装饰器——锦上添花神器</p>
+</blockquote>
+<p><strong>为什么使用decorator?</strong>
+我们经常在使用某些Service的时候，更希望它能具备一些额外的功能，这时我们难道改这个Service吗？如果是系统自带的呢，改吗？这当然不现实吧。所以我们的装饰器decorator就发挥作用了，它能让已有的功能锦上添花。我们在config里面使用装饰器。</p>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveController&quot;&gt;
+    {{message}}
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&quot;app&quot;, []);
+
+    app.config([&#39;$provide&#39;, function($provide) {
+        $provide.decorator(&#39;infoService&#39;, function($delegate) {
+            $delegate.email = &quot;1028317108@qq.com&quot;;
+            return $delegate;
+        })
+    }]);
+
+    app.service(&#39;infoService&#39;, function() {
+        this.name = &#39;zhaomenghuan&#39;;
+    })
+
+    app.controller(&#39;serveController&#39;, [&#39;$scope&#39;, &#39;infoService&#39;, function($scope, infoService) {
+        $scope.message = &#39;name：&#39;+infoService.name + &#39;&lt;=&gt;Emil：&#39;+infoService.email;
+    }]);
+&lt;/script&gt;
+</code></pre>
+<p>我们开始写的infoService没有Emil，我们通过装饰器decorator在不修改infoService代码的情况下添加了email新属性。</p>
+<p>源码部分：</p>
+<pre><code class="lang-js">function provider(name, provider_) {
+    if(isFunction(provider_)) {
+        provider_ = providerInjector.instantiate(provider_);
+    }
+    if(!provider_.$get) {
+        throw Error(&#39;Provider &#39; + name + &#39; must define $get factory method.&#39;);
+    }
+    return providerCache[name + providerSuffix] = provider_;
+}
+
+function factory(name, factoryFn) {
+    return provider(name, { $get: factoryFn });
+}
+
+function service(name, constructor) {
+    return factory(name, [&#39;$injector&#39;, function($injector) {
+        return $injector.instantiate(constructor);
+    }]);
+}
+
+function value(name, value) { return factory(name, valueFn(value)); }
+
+function constant(name, value) {
+    providerCache[name] = value;
+    instanceCache[name] = value;
+}
+
+function decorator(serviceName, decorFn) {
+    var origProvider = providerInjector.get(serviceName + providerSuffix),
+        orig$get = origProvider.$get;
+    origProvider.$get = function() {
+        var origInstance = instanceInjector.invoke(orig$get, origProvider);
+        return instanceInjector.invoke(decorFn, null, { $delegate: origInstance });
+    };
+}
+</code></pre>
+<p><strong>注意：</strong>所有的供应商都只被实例化一次，也就说他们都是单例的，除了constant，所有的供应商都可以被装饰器(decorator)装饰。模块的config方法只能注入 provider 和 constant；模块的run方法中可被注入的依赖包括服务(service)、值(value)和参量(constant)，不能注入&quot;provider&quot;类型的依赖。</p>
+<h3 id="-">注入依赖的几种方法</h3>
+<blockquote>
+<p>通过数组标注在方法的参数中声明依赖（优先考虑）</p>
+</blockquote>
+<pre><code class="lang-js">app.controller(&#39;serveCtrl&#39;, [&#39;$scope&#39;, &#39;factoryServe&#39;, function ($scope, factoryServe) {
+    $scope.message = factoryServe.message;
+}])
+</code></pre>
+<blockquote>
+<p>定义在控制器构造方法的$inject属性中</p>
+</blockquote>
+<pre><code class="lang-js">app.$inject = [&#39;$scope&#39;, &#39;factoryServe&#39;]
+app.controller(&#39;serveCtrl&#39;, function ($scope, factoryServe) {
+    $scope.message = factoryServe.message;
+})
+</code></pre>
+<blockquote>
+<p>隐式声明依赖</p>
+</blockquote>
+<pre><code class="lang-js">app.controller(&#39;serveCtrl&#39;, function ($scope, factoryServe) {
+    $scope.message = factoryServe.message;
+})
+</code></pre>
+<p>注入器可以从函数的参数名中推断所依赖的服务。上面的函数中声明了$scope和factoryServe服务作为依赖。 这种方式可是代码更加简洁，但这种方式不能和JavaScript的代码混淆器一起使用。可以通过ng-annotate在minifying之前隐式的添加依赖。</p>
+<p>通过在ng-app所在的DOM元素中添加ng-strict-di切换到严格的依赖注入模式，strict模式下使用隐式的标注会报错，如果用angular.bootstrap手动启动angular应用，我们可以通过设置config中的strictDi属性，启动strict模式。</p>
+<pre><code class="lang-js">angular.bootstrap(document, [&#39;myApp&#39;], {
+  strictDi: true
+});
+</code></pre>
+<h3 id="-injector-">注入器（$injector）</h3>
+<p>angular注入器（$injector类似于spring容器）负责创建、查找注入依赖, 每个module都会有自己的注入器。注入器负责从我们通过$provide创建的服务中创建注入的实例。只要你编写了一个带有可注入性的参数，你都能看到注入器是如何运行的。每一个AngularJS应用都有唯一一个$injector，当应用启动的时候它被创造出来，你可以通过将$injector注入到任何可注入函数中来得到它（$injector知道如何注入它自己！）。</p>
+<p>一旦你拥有了$injector，你可以动过调用get函数来获得任何一个已经被定义过的服务的实例。例如：</p>
+<pre><code class="lang-js">&lt;div ng-controller=&quot;serveController&quot;&gt;
+    {{message}}
+&lt;/div&gt;
+
+&lt;script type=&quot;application/javascript&quot;&gt;
+    var app = angular.module(&#39;app&#39;, []);
+
+    app.factory(&#39;factoryServe&#39;, function(){
+        return {
+            message: &#39;factory serve&#39;
+        }
+    })
+
+    var injector = angular.injector([&#39;app&#39;]);
+    app.controller(&#39;serveController&#39;, [&#39;$scope&#39;, function ($scope) {
+        var factoryServe = injector.get(&#39;factoryServe&#39;);
+        $scope.message = factoryServe.message;
+    }])
+&lt;/script&gt;
+</code></pre>
+<p>这是因为Angular在编译模板阶段为ng-controller指令以及实例化serveController注入相关的依赖。</p>
+<pre><code class="lang-js">injector.instantiate(serveController);
+</code></pre>
+<h2 id="-">总结</h2>
+<p>react，angular，vue这三大框架带给前端变化，远远不只是让我们放弃jQuery这种直接操作dom的方式，也不仅仅是解决数据绑定的问题，我想更多的是改变我们的思维方式，用数据驱动的方式去更新视图，通过划分组件或者作用域，来实现整体的颗粒化，实现模块间分治，同时也改变了前后端协作的工作模式。</p>
+<h2 id="-">参考</h2>
+<blockquote>
+<ul>
+<li><a href="https://cn.vuejs.org/v2/guide/components.html">vue.js组件</a></li>
+<li><a href="http://www.cnblogs.com/CraryPrimitiveMan/p/3679552.html">AngularJS的学习--$on、$emit和$broadcast的使用</a></li>
+<li><a href="http://imweb.io/topic/571b567505637d4c67ae3f64">前端需要知道的 依赖注入(Dependency Injection, DI)</a></li>
+<li><a href="http://sentsin.com/web/663.html">理解AngularJS中的依赖注入</a></li>
+<li><a href="https://segmentfault.com/a/1190000007019476">AngularJs中的provide</a></li>
+</ul>
+</blockquote>

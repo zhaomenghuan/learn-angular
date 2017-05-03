@@ -1,0 +1,8 @@
+md-list.list
+    md-list-item.md-3-line(ng-repeat="item in blogs")
+        div.md-list-item-text.md-padding
+            h2.title 【{{item.from}}】{{item.title}}
+            h3.time 发布时间：{{item.time}}
+            p.digest  {{item.digest}}
+            md-chips(ng-model="item.keyword" readonly="true")
+        md-button.md-secondary(ng-click="openBlogDetail(item.pageId, item.title)") 阅读

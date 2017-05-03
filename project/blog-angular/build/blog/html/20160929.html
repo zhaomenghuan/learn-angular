@@ -1,0 +1,394 @@
+<h1 id="node-">node学习之路（一）—— 网络请求</h1>
+<blockquote>
+<ul>
+<li><strong>文章来源：小青年原创</strong></li>
+<li><strong>发布时间：2016-09-29</strong></li>
+<li><strong>关键词：JavaScript，nodejs，http，url ，Query String，爬虫</strong></li>
+<li><strong>转载需标注本文原始地址: <a href="http://zhaomenghuan.github.io/#!/blog/20160929">http://zhaomenghuan.github.io/#!/blog/20160929</a></strong></li>
+</ul>
+</blockquote>
+<h2 id="-">前言</h2>
+<p>一直以来想深入学习一下node，一来是自己目前也没有什么时间去学习服务器端语言，但是有时候又想自己撸一下服务器端，本着爱折腾的精神开始写一写关于node的文章记录学习心得。本系列文章不会过多去讲解node安装、基本API等内容，而是通过一些实例去总结常用用法。本文主要讲解node网络操作的相关内容，node中的网络操作依赖于http模块，http模块提供了两种使用方式：</p>
+<ul>
+<li>作为服务器端使用，创建一个http服务器，监听http客户端请求并返回响应；</li>
+<li>作为客户端使用，发起一个http客户端请求，获取服务器端响应。 </li>
+</ul>
+<h2 id="node-http-">node http模块创建服务器</h2>
+<h3 id="node-get-">node 处理 get 请求实例</h3>
+<p>毕竟作为一个前端，我们经常需要自己搭建一个服务器做测试，这里我们先来讲一下node http模块作为服务器端使用。首先我们需要，使用createServer创建一个服务，然后通过listen监听客服端http请求。</p>
+<p>我们可以创建一个最简单的服务器，在页面输出<code>hello world</code>，我们可以创建helloworld.js，内容如下：</p>
+<pre><code class="lang-js">var http = require(&#39;http&#39;);
+
+http.createServer(function(request, response){
+    response.writeHead(200, { &#39;Content-Type&#39;: &#39;text-plain&#39; });
+    response.end(&#39;hello world!&#39;)
+}).listen(8888);
+</code></pre>
+<p>在命令行输入node helloworld.js即可，我们打开在浏览器打开<a href="http://127.0.0.1:8888/就可以看到页面输出hello">http://127.0.0.1:8888/就可以看到页面输出hello</a> world!。</p>
+<p>下面我们在本地写一个页面，通过jsonp访问我们创建的node服务器：</p>
+<pre><code class="lang-js">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;meta charset=&quot;utf-8&quot; /&gt;
+        &lt;title&gt;&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id=&quot;output&quot;&gt;&lt;/div&gt;
+
+        &lt;script type=&quot;text/javascript&quot;&gt;
+            // 创建script标签
+            function importScript(src){
+                var el = document.createElement(&#39;script&#39;);
+                el.src = src;
+                el.async = true;
+                el.defer = true;
+                document.body.appendChild(el);
+            }
+
+            // 响应的方法
+            function jsonpcallback(rs) {
+                console.log(JSON.stringify(rs));
+                document.getElementById(&quot;output&quot;).innerHTML = JSON.stringify(rs);
+            }
+
+            // 发起get请求
+            importScript(&#39;http://127.0.0.1:8888?userid=xiaoqingnian&amp;callback=jsonpcallback&#39;);
+        &lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>我们当然需要将上述node服务器中的代码稍作修改：</p>
+<pre><code class="lang-js">var http = require(&#39;http&#39;); // 提供web服务
+var url = require(&#39;url&#39;);    // 解析GET请求
+
+var data = {
+    &#39;name&#39;: &#39;zhaomenghuan&#39;, 
+    &#39;age&#39;: &#39;22&#39;
+};
+
+http.createServer(function(req, res){  
+    // 将url字符串转换成Url对象
+    var params = url.parse(req.url, true);  
+    console.log(params);
+    // 查询参数
+    if(params.query){
+        // 根据附件条件查询
+        if(params.query.userid === &#39;xiaoqingnian&#39;){
+            // 判断是否为jsonp方式请求，若是则使用jsonp方式，否则为普通web方式
+            if (params.query.callback) {  
+                var resurlt =  params.query.callback + &#39;(&#39; + JSON.stringify(data) + &#39;)&#39;;
+                res.end(resurlt);  
+            } else {  
+                res.end(JSON.stringify(data));
+            }
+        } 
+    }      
+}).listen(8888);
+</code></pre>
+<p>我们在命令行可以看到：</p>
+<pre><code class="lang-js">Url {
+  protocol: null,
+  slashes: null,
+  auth: null,
+  host: null,
+  port: null,
+  hostname: null,
+  hash: null,
+  search: &#39;?userid=xiaoqingnian&amp;callback=jsonpcallback&#39;,
+  query: { userid: &#39;xiaoqingnian&#39;, callback: &#39;jsonpcallback&#39; },
+  pathname: &#39;/&#39;,
+  path: &#39;/?userid=xiaoqingnian&amp;callback=jsonpcallback&#39;,
+  href: &#39;/?userid=xiaoqingnian&amp;callback=jsonpcallback&#39; }
+</code></pre>
+<p>经过服务器端jsonp处理，然后返回一个函数：</p>
+<pre><code class="lang-js">jsonpcallback({&quot;name&quot;:&quot;zhaomenghuan&quot;,&quot;age&quot;:&quot;22&quot;})
+</code></pre>
+<p>而我们在页面中定义了一个jsonpcallback()的方法，所以当我们在请求页面动态生成script调用服务器地址，这样相当于在页面执行了下我们定义的函数。jsonp的实现原理主要是script标签src可以跨域执行代码，类似于你引用js库，然后调用这个js库里面的方法；这是这里我们可以认为反过来了，你是在本地定义函数，调用的逻辑通过服务器返回的一个函数执行了，所以jsonp并没有什么神奇的，和XMLHttpRequest、ajax半毛钱关系都没有，而且JSONP需要服务器端支持，始终是无状态连接，不能获悉连接状态和错误事件，而且只能走GET的形式。</p>
+<h3 id="node-post-">node 处理 post 请求实例</h3>
+<p>当然这里我们可以直接在后台设置响应头进行跨域（CORS），如：</p>
+<pre><code class="lang-js">var http = require(&quot;http&quot;);    // 提供web服务
+var query = require(&quot;querystring&quot;);    // 解析POST请求
+
+http.createServer(function(req,res){
+      // 报头添加Access-Control-Allow-Origin标签，值为特定的URL或&quot;*&quot;(表示允许所有域访问当前域)
+      res.setHeader(&quot;Access-Control-Allow-Origin&quot;,&quot;*&quot;);
+
+      var postdata = &#39;&#39;;
+      // 一旦监听器被添加，可读流会触发 &#39;data&#39; 事件
+    req.addListener(&quot;data&quot;,function(chunk){
+        postdata += chunk;
+    })
+    // &#39;end&#39; 事件表明已经得到了完整的 body
+    req.addListener(&quot;end&quot;,function(){
+        console.log(postdata);     // &#39;appid=xiaoqingnian&#39;
+        // 将接收到参数串转换位为json对象
+        var params = query.parse(postdata);
+        if(params.userid == &#39;xiaoqingnian&#39;){
+            res.end(&#39;{&quot;name&quot;:&quot;zhaomenghuan&quot;,&quot;age&quot;:&quot;22&quot;}&#39;);
+        }
+    })
+
+}).listen(8080);
+</code></pre>
+<blockquote>
+<p>我们通过流的形式接收前端post传递的参数，通过监听data和end事件，后面在讲解event模块的时候再深入探究。</p>
+</blockquote>
+<p>CORS默认只支持GET/POST这两种http请求类型，如果要开启PUT/DELETE之类的方式，需要在服务端在添加一个&quot;Access-Control-Allow-Methods&quot;报头标签：</p>
+<pre><code class="lang-js">res.setHeader(
+      &quot;Access-Control-Allow-Methods&quot;,
+      &quot;PUT, GET, POST, DELETE, HEAD, PATCH&quot;
+);
+</code></pre>
+<p>前端访问代码如下：</p>
+<pre><code class="lang-js">var xhr = new XMLHttpRequest();
+xhr.onload = function () {
+    console.log(this.responseText);
+};
+xhr.onreadystatechange = function() {
+    console.log(this.readyState);
+};
+
+xhr.open(&quot;post&quot;, &quot;http://127.0.0.1:8080&quot;, true);
+xhr.setRequestHeader(&quot;Content-Type&quot;, &quot;application/x-www-form-urlencoded&quot;);
+xhr.send(&quot;userid=xiaoqingnian&quot;);
+</code></pre>
+<h3 id="url-api-">url 模块API详解</h3>
+<h4 id="url-parse-url-">url.parse——解析url字符串</h4>
+<p>上述代码中比较关键的是我们通过url.parse方法将url字符串转成Url对象，用法如下：</p>
+<pre><code class="lang-js">url.parse(urlStr, [parseQueryString], [slashesDenoteHost])
+</code></pre>
+<p><strong>接收参数：</strong></p>
+<ul>
+<li><strong>urlStr</strong>：url字符串</li>
+<li><strong>parseQueryString</strong>：参数为true时，query会被解析为JSON格式，否则为普通字符串格式，默认为false；如：<ul>
+<li>参数为true：<code>query: { userid: &#39;xiaoqingnian&#39;, callback: &#39;jsonpcallback&#39; }</code></li>
+<li>参数为false：<code>query: &#39;userid=xiaoqingnian&amp;callback=jsonpcallback&#39;</code></li>
+</ul>
+</li>
+<li><strong>slashesDenoteHost</strong>：默认为false，当url是 ‘http://’ 或 ‘ftp://’ 等标志的协议前缀打头的，或直接以地址打头，如 ‘127.0.0.1’ 或 ‘localhost’ 时候是没有区别的；当且仅当以2个斜杠打头的时候，比如 ‘//127.0.0.1’ 才有区别。这时候，如果其值为true，则第一个单个 ‘/’ 之前的部分被解析为 ‘host’ 和 ‘hostname’，如 ” host : ‘127.0.0.1’ “，如果为false，包括2个反斜杠在内的所有字符串被解析为pathname。如：<pre><code class="lang-js">&gt; url.parse(&#39;//www.foo/bar&#39;,true,true)
+Url {
+protocol: null,
+slashes: true,
+auth: null,
+host: &#39;www.foo&#39;,
+port: null,
+hostname: &#39;www.foo&#39;,
+hash: null,
+search: &#39;&#39;,
+query: {},
+pathname: &#39;/bar&#39;,
+path: &#39;/bar&#39;,
+href: &#39;//www.foo/bar&#39; }
+&gt; url.parse(&#39;//www.foo/bar&#39;,true,false)
+Url {
+protocol: null,
+slashes: null,
+auth: null,
+host: null,
+port: null,
+hostname: null,
+hash: null,
+search: &#39;&#39;,
+query: {},
+pathname: &#39;//www.foo/bar&#39;,
+path: &#39;//www.foo/bar&#39;,
+href: &#39;//www.foo/bar&#39; }
+</code></pre>
+这里的URL对象和浏览器中的location对象类似，location中如果我们需要使用类似的方法，我们需要自己构造。</li>
+</ul>
+<h4 id="url-format-url-">url.format——格式化URL对象</h4>
+<p>我们可以通过url.format方法将一个解析后的URL对象格式化成url字符串，用法为：</p>
+<pre><code class="lang-js">url.format(urlObj)
+</code></pre>
+<p>例子：</p>
+<pre><code class="lang-js">url.format({
+  protocol: &#39;http:&#39;,
+  slashes: true,
+  auth: &#39;user:pass&#39;,
+  host: &#39;host.com:8080&#39;,
+  port: &#39;8080&#39;,
+  hostname: &#39;host.com&#39;,
+  hash: &#39;#hash&#39;,
+  search: &#39;?query=string&#39;,
+  query: &#39;query=string&#39;,
+  pathname: &#39;/p/a/t/h&#39;,
+  path: &#39;/p/a/t/h?query=string&#39;,
+  href: &#39;http://user:pass@host.com:8080/p/a/t/h?query=string#hash&#39; 
+})
+
+结果为：
+&#39;http://user:pass@host.com:8080/p/a/t/h?query=string#hash&#39;
+</code></pre>
+<h4 id="url-resolve-url-">url.resolve——拼接url字符串</h4>
+<p>我们可以通过url.resolve为URL或 href 插入 或 替换原有的标签，接收参数：
+from源地址，to需要添加或替换的标签。</p>
+<pre><code class="lang-js">url.resolve(from, to)
+</code></pre>
+<p>例子为：</p>
+<pre><code class="lang-js">url.resolve(&#39;/one/two/three&#39;, &#39;four&#39;)
+=&gt; &#39;/one/two/four&#39;
+url.resolve(&#39;http://example.com/&#39;, &#39;/one&#39;)    
+=&gt; &#39;http://example.com/one&#39;
+url.resolve(&#39;http://example.com/one&#39;, &#39;/two&#39;) 
+=&gt; &#39;http://example.com/two&#39;
+</code></pre>
+<h3 id="query-string-query-string">Query String 模块Query String</h3>
+<h4 id="querystring-escape-">querystring.escape——字符串编码</h4>
+<pre><code class="lang-js">querystring.escape(&#39;appkey=123&amp;version=1.0.0+&#39;)
+// &#39;appkey%3D123%26version%3D1.0.0%2B&#39;
+</code></pre>
+<h4 id="querystring-unescape-">querystring.unescape——字符串解码</h4>
+<pre><code class="lang-js">querystring.unescape(&#39;appkey%3D123%26version%3D1.0.0%2B&#39;)
+// &#39;appkey=123&amp;version=1.0.0+&#39;
+</code></pre>
+<h4 id="querystring-stringify-querystring-encode-">querystring.stringify(querystring.encode)——序列化对象</h4>
+<pre><code class="lang-js">querystring.stringify(obj[, sep][, eq][, options])
+querystring.encode(obj[, sep][, eq][, options])
+</code></pre>
+<p><strong>接收参数</strong>：</p>
+<ul>
+<li><strong>obj</strong>： 欲转换的对象</li>
+<li><strong>sep</strong>：设置分隔符，默认为 ‘&amp;&#39;</li>
+<li><strong>eq</strong>：设置赋值符，默认为 ‘=&#39;</li>
+</ul>
+<pre><code class="lang-js">querystring.stringify({foo: &#39;bar&#39;, baz: [&#39;qux&#39;, &#39;quux&#39;], corge: &#39;&#39;})
+// &#39;foo=bar&amp;baz=qux&amp;baz=quux&amp;corge=&#39;
+
+querystring.stringify({foo: &#39;bar&#39;, baz: [&#39;qux&#39;, &#39;quux&#39;], corge: &#39;&#39;},&#39;,&#39;,&#39;:&#39;)
+// &#39;foo:bar,baz:qux,baz:quux,corge:&#39;
+</code></pre>
+<h4 id="querystring-parse-querystring-decode-query-">querystring.parse(querystring.decode)——解析query字符串</h4>
+<pre><code class="lang-js">querystring.parse(str[, sep][, eq][, options])
+querystring.decode(str[, sep][, eq][, options])
+</code></pre>
+<p><strong>接收参数</strong>：</p>
+<ul>
+<li><strong>str</strong>：欲转换的字符串</li>
+<li><strong>sep</strong>：设置分隔符，默认为 ‘&amp;&#39;</li>
+<li><strong>eq</strong>：设置赋值符，默认为 ‘=&#39;</li>
+<li><strong>[options]</strong> maxKeys 可接受字符串的最大长度，默认为1000</li>
+</ul>
+<pre><code class="lang-js">querystring.parse(&#39;foo=bar&amp;baz=qux&amp;baz=quux&amp;corge=&#39;)
+// { foo: &#39;bar&#39;, baz: [ &#39;qux&#39;, &#39;quux&#39; ], corge: &#39;&#39; }
+
+querystring.parse(&#39;foo:bar,baz:qux,baz:quux,corge:&#39;,&#39;,&#39;,&#39;:&#39;)
+{ foo: &#39;bar&#39;, baz: [ &#39;qux&#39;, &#39;quux&#39; ], corge: &#39;&#39; }
+</code></pre>
+<h2 id="node-http-">node http模块发起请求</h2>
+<p>平时喜欢看博客，毕竟买书要钱而且有时候没有耐心读完整本书，所以很喜欢逛一些网站，但是很多时候把所有的站逛一下又没有那么多时间，哈哈，所以就准备把常去的网站的文章爬出来做一个文章列表，一来省去收集的时间，二来借此熟悉熟悉node相关的东西。这里我们首先看一个爬虫的小例子，下面以SF为例加以说明（希望不要被封号）。</p>
+<h3 id="http-request-http-get-">http.request与http.get的区别</h3>
+<h4 id="http-request-options-callback-">http.request(options, callback)</h4>
+<p>options可以是一个对象或一个字符串。如果options是一个字符串, 它将自动使用url.parse()解析。http.request() 返回一个 http.ClientRequest类的实例。ClientRequest实例是一个可写流对象。如果需要用POST请求上传一个文件的话，就将其写入到ClientRequest对象。使用http.request()方法时都必须总是调用req.end()以表明这个请求已经完成，即使响应body里没有任何数据。如果在请求期间发生错误（DNS解析、TCP级别的错误或实际HTTP解析错误），在返回的请求对象会触发一个&#39;error&#39;事件。</p>
+<p><strong>Options配置说明：</strong></p>
+<ul>
+<li>host：请求发送到的服务器的域名或IP地址。默认为&#39;localhost&#39;。</li>
+<li>hostname：用于支持url.parse()。hostname比host更好一些</li>
+<li>port：远程服务器的端口。默认值为80。</li>
+<li>localAddress：用于绑定网络连接的本地接口。</li>
+<li>socketPath：Unix域套接字（使用host:port或socketPath）</li>
+<li>method：指定HTTP请求方法的字符串。默认为&#39;GET&#39;。</li>
+<li>path：请求路径。默认为&#39;/&#39;。如果有查询字符串，则需要包含。例如&#39;/index.html?page=12&#39;。请求路径包含非法字符时抛出异常。目前，只否决空格，不过在未来可能改变。</li>
+<li>headers：包含请求头的对象。</li>
+<li>auth：用于计算认证头的基本认证，即&#39;user:password&#39;</li>
+<li>agent：控制Agent的行为。当使用了一个Agent的时候，请求将默认为Connection: keep-alive。可能的值为：<ul>
+<li>undefined（默认）：在这个主机和端口上使用[全局Agent][]。</li>
+<li>Agent对象：在Agent中显式使用passed。</li>
+<li>false：在对Agent进行资源池的时候，选择停用连接，默认请求为：Connection: close。</li>
+</ul>
+</li>
+<li>keepAlive：{Boolean} 保持资源池周围的套接字在未来被用于其它请求。默认值为false</li>
+<li>keepAliveMsecs：{Integer} 当使用HTTP KeepAlive的时候，通过正在保持活动的套接字发送TCP KeepAlive包的频繁程度。默认值为1000。仅当keepAlive被设置为true时才相关。</li>
+</ul>
+<h4 id="http-get-options-callback-">http.get(options, callback)</h4>
+<p>因为大部分的请求是没有报文体的GET请求，所以Node提供了这种便捷的方法。该方法与http.request()的唯一区别是它设置的是GET方法并自动调用req.end()。</p>
+<h3 id="-">爬虫实例</h3>
+<p>这里我们使用es6的新特性写：</p>
+<pre><code class="lang-js">const https = require(&#39;https&#39;);
+https.get(&#39;https://segmentfault.com/blogs&#39;, (res) =&gt; {
+    console.log(&#39;statusCode: &#39;, res.statusCode);
+      console.log(&#39;headers: &#39;, res.headers);
+      var data = &#39;&#39;;
+      res.on(&#39;data&#39;, (chunk) =&gt; {
+        data += chunk;
+      });
+      res.on(&#39;end&#39;, () =&gt; {
+          console.log(data);
+      })
+}).on(&#39;error&#39;, (e) =&gt; {
+      console.error(e);
+});
+</code></pre>
+<p>这样一小段代码我们就可以拿到segmentfault的博客页面的源码，需要说明的是因为这里请求的网站是https协议，所以我们需要引入https模块，用法同http一致。下面需要做的是解析html代码，下面我们需要做的就是解析源码，这里我们可以引入cheerio，一个node版的类jQuery模块，npm地址：<a href="https://www.npmjs.com/package/cheerio。">https://www.npmjs.com/package/cheerio。</a></p>
+<p>首先第一步安装：</p>
+<pre><code class="lang-js">npm install cheerio
+</code></pre>
+<p>然后就是将html代码load进来，如下：</p>
+<pre><code class="lang-js">var cheerio = require(&#39;cheerio&#39;),
+var $ = cheerio.load(html);
+</code></pre>
+<p>最后我们就是分析dom结构咯，通过类似于jQuery的方法获取DOM元素的内容，然后就将数据重新组装成json结构的数据。这里就是分析源码然后，这里我就不详细分析了，直接上代码：</p>
+<pre><code class="lang-js">function htmlparser(html){
+    var baseUrl = &#39;https://segmentfault.com&#39;;
+
+    var $ = cheerio.load(html);
+    var bloglist = $(&#39;.stream-list__item&#39;);
+
+    var data = [];
+
+    bloglist.each(function(item){
+        var page = $(this);
+        var summary = page.find(&#39;.summary&#39;);
+        var blogrank = page.find(&#39;.blog-rank&#39;);
+
+        var title = summary.find(&#39;.title a&#39;).text();
+        var href = baseUrl + summary.find(&#39;.title a&#39;).attr(&#39;href&#39;);
+        var author = summary.find(&#39;.author li a&#39;).first().text().trim();
+        var origin = summary.find(&#39;.author li a&#39;).last().text().trim();
+        var time = summary.find(&#39;.author li span&#39;)[0].nextSibling.data.trim();
+        var excerpt = summary.find(&#39;p.excerpt&#39;).text().trim();
+        var votes = blogrank.find(&#39;.votes&#39;).text().trim();
+        var views = blogrank.find(&#39;.views&#39;).text().trim();
+
+        data.push({
+            title: title,
+            href: href,
+            author: author,
+            origin: origin,
+            time: time,
+            votes: votes,
+            views: views,
+            excerpt: excerpt
+        })
+    })
+
+    return data;
+}
+</code></pre>
+<p>结果如下：</p>
+<pre><code class="lang-js">[{ title: &#39;转换流&#39;,
+    href: &#39;https://segmentfault.com/a/1190000007036273&#39;,
+    author: &#39;SwiftGG翻译组&#39;,
+    origin: &#39;SwiftGG翻译组&#39;,
+    time: &#39;1 小时前&#39;,
+    votes: &#39;0推荐&#39;,
+    views: &#39;14浏览&#39;,
+    excerpt: &#39;作者：Erica Sadun，原文链接，原文日期：2016-08-29译者：Darren；校对：shank
+s；定稿：千叶知风 我在很多地方都表达了我对流的喜爱。我在 Swift Cookbook 中介绍了一些。现
+在，我将通过 Pearson 的内容更新计划...&#39; },
+......
+]
+</code></pre>
+<p>这里我们只是抓取了文章列表的一页，如果需要抓取多页，只需要将内容再次封装一下，传入一个地址参数?page=2，如：<a href="https://segmentfault.com/blogs?page=2">https://segmentfault.com/blogs?page=2</a>
+另外我们也没有将详情页进一步爬虫，毕竟文章的目的只是学习，同时方便自己查看列表，这里保留原始地址。</p>
+<p>温馨提示：大家不要都拿sf做测试哦，不然玩坏了就不好。</p>
+<h3 id="-">模拟登陆</h3>
+<p>哈哈，写到这里已经很晚了，用node试了试模拟登陆SF，结果404，暂时没有什么思路，等有时间再试试专门开篇讲解咯。这里推荐一篇之前看到的文章：<a href="https://segmentfault.com/a/1190000003851057">记一次用 NodeJs 实现模拟登录的思路</a>。</p>
+<h2 id="-">参考</h2>
+<blockquote>
+<ul>
+<li><a href="https://nodejs.org/docs/latest-v5.x/api/">nodejs官网API文档</a></li>
+<li><a href="http://www.imooc.com/learn/348">进击Node.js基础（一）</a></li>
+<li><a href="http://nodeapi.ucdok.com/#/api/">Node.js v4.2.4 文档 中文版</a></li>
+<li>文章代码源码下载：<a href="http://zhaomenghuan.github.io/resource/blog/demo/20160929.zip">http://zhaomenghuan.github.io/resource/blog/demo/20160929.zip</a></li>
+</ul>
+</blockquote>
